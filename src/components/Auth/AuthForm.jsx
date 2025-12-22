@@ -141,6 +141,7 @@ const AuthForm = ({ isLogin = false }) => {
             {
               email: loginData.email,
               role: result.user?.role || 'user',
+              id: result.data._id,
               ...result.user,
             },
             {

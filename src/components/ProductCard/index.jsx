@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { FiHeart, FiEye, FiShoppingBag, FiCheck } from 'react-icons/fi'
 import { useDispatch, useSelector } from 'react-redux'
+import { selectAllCategories } from '@/features/categories/categoriesSlice'
 import { useCart } from '@/context/CartContext'
 import { useWishlist } from '@/context/WishlistContext'
 import { toast } from '@/utils/toastConfig'
@@ -20,7 +21,7 @@ const ProductInfo = ({
 }) => (
   <div className={className}>
     <p className="text-sm text-[#8A9BA8] uppercase tracking-wider mb-1">
-      {brand}
+      {categoryName || brand}
     </p>
     <h3
       onClick={handleNavigate}
@@ -37,6 +38,25 @@ const ProductInfo = ({
   </div>
 )
 
+// Helper function to get category name by ID
+const getCategoryNameById = (categoryId, categories) => {
+  if (!categoryId || !categories) return null
+
+  // First try to find in the flat array
+  const category = categories.find((cat) => cat._id === categoryId)
+  if (category) return category.name
+
+  // If not found, search in nested categories
+  for (const cat of categories) {
+    if (cat.children) {
+      const found = cat.children.find((child) => child._id === categoryId)
+      if (found) return found.name
+    }
+  }
+
+  return null
+}
+
 const ProductCard = ({
   image: imageUrl,
   brand,
@@ -49,6 +69,7 @@ const ProductCard = ({
   minOrderLimit = 1,
   sideImages = [],
   viewMode = 'grid', // 'grid' or 'list'
+  categoryId,
   ...props
 }) => {
   const router = useRouter()
@@ -58,6 +79,11 @@ const ProductCard = ({
   const { status: productDetailsStatus } = useSelector(
     (state) => state.productDetails,
   )
+  const allCategories = useSelector(selectAllCategories)
+
+  const categoryName = categoryId
+    ? getCategoryNameById(categoryId, allCategories)
+    : null
 
   const handleImageError = () => {
     console.error(`Failed to load image: ${imageUrl}`)
@@ -377,7 +403,7 @@ const ProductCard = ({
       {/* Product Info */}
       <div className="text-center">
         <p className="text-sm text-[#8A9BA8] uppercase tracking-wider mb-1">
-          {brand}
+          {categoryName}
         </p>
         <h3
           onClick={handleNavigate}

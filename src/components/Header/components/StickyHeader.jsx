@@ -5,7 +5,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import {
   FaSearch,
-  FaUserAlt,
   FaRegHeart,
   FaShoppingBag,
   FaChevronDown,
@@ -14,6 +13,7 @@ import { useCart } from '@/context/CartContext'
 import { useWishlist } from '@/context/WishlistContext'
 import { navItems } from '@/utils/navigation'
 import CatalogDropdown from './CatalogDropdown'
+import AccountDropdown from './AccountDropdown'
 
 const StickyHeader = () => {
   const { cartCount } = useCart()
@@ -123,12 +123,9 @@ const StickyHeader = () => {
             </Link>
 
             {/* User/Sign In */}
-            <Link
-              href="/signin"
-              className="p-2 rounded-full bg-[#ced4da] hover:bg-gray-200 transition-colors relative"
-            >
-              <FaUserAlt className="text-lg" />
-            </Link>
+            <div className="relative">
+              <AccountDropdown showIcon={true} />
+            </div>
 
             {/* Wishlist */}
             <Link

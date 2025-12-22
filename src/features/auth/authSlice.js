@@ -87,6 +87,24 @@ export const registerUser = createAsyncThunk(
   },
 )
 
+// Async thunk for changing password
+export const changePassword = createAsyncThunk(
+  'auth/changePassword',
+  async ({ oldPassword, newPassword }, { rejectWithValue }) => {
+    try {
+      const response = await authService.changePassword({
+        oldPassword,
+        newPassword,
+      })
+      return response
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to change password',
+      )
+    }
+  },
+)
+
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
@@ -104,17 +122,24 @@ const authSlice = createSlice({
       success: false,
       error: null,
     },
+    changePassword: {
+      loading: false,
+      success: false,
+      error: null,
+    },
   },
   reducers: {
     resetAuthState: (state) => {
       state.loading = false
       state.error = null
       state.success = false
-      state.forgotPassword = {
-        loading: false,
-        success: false,
-        error: null,
-      }
+      state.user = null
+      state.forgotPassword.loading = false
+      state.forgotPassword.success = false
+      state.forgotPassword.error = null
+      state.changePassword.loading = false
+      state.changePassword.success = false
+      state.changePassword.error = null
     },
     resetForgotPasswordState: (state) => {
       state.forgotPassword = {
@@ -134,6 +159,13 @@ const authSlice = createSlice({
       state.loading = false
       state.error = null
       state.success = false
+    },
+    resetChangePasswordState: (state) => {
+      state.changePassword = {
+        loading: false,
+        success: false,
+        error: null,
+      }
     },
   },
   extraReducers: (builder) => {
@@ -222,5 +254,6 @@ export const {
   resetForgotPasswordState,
   resetVerifyOTPState,
   resetPasswordState,
+  resetChangePasswordState,
 } = authSlice.actions
 export default authSlice.reducer

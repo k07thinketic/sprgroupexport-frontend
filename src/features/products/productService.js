@@ -29,7 +29,9 @@ export const fetchAllProducts = async (filters = {}) => {
     params.append('page', page)
     params.append('limit', limit)
 
-    const response = await api.get(`/product/get-all?${params.toString()}`)
+    const response = await api.get(
+      `/product/get-all-product?${params.toString()}`,
+    )
     return response.data
   } catch (error) {
     console.error('Error fetching products:', error)

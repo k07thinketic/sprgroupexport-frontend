@@ -70,6 +70,7 @@ const Header = () => {
                 <AccountDropdown
                   showAccountDropdown={showAccountDropdown}
                   setShowAccountDropdown={setShowAccountDropdown}
+                  showIcon={false}
                 />
               </div>
             </div>

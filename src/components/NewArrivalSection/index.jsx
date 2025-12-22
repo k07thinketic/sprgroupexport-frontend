@@ -34,6 +34,7 @@ const NewArrivalSection = () => {
     status: product.status || 'in-stock',
     minOrderLimit: product.minOrderLimit || 1,
     sideImages: product.sideImages || [],
+    categoryId: product.category,
     ...product, // Spread the rest of the product properties
   }))
 

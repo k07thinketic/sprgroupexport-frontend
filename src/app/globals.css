@@ -48,19 +48,13 @@
     font-family: var(--font-sans);
   }
 
-  /* Add pointer cursor to all buttons and button-like elements */
-  button,
-  [role='button'] {
-    cursor: pointer;
-  }
-
   /* Add cursor-pointer to all interactive elements */
   button,
+  [type='button'],
+  [type='submit'],
+  [type='reset'],
   [role='button'],
   a,
-  input[type='submit'],
-  input[type='button'],
-  input[type='reset'],
   select,
   .cursor-pointer {
     cursor: pointer;

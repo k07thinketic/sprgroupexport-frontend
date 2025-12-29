@@ -28,17 +28,17 @@ export default function MediaUploadModal({ open, onClose }) {
   }
 
   const addFiles = (fileList) => {
-    const newFiles = Array.from(fileList).map((file) => {
-      const valid = file.size <= MAX_SIZE
+    const existingNames = new Set(files.map((f) => f.file.name))
 
-      return {
+    const newFiles = Array.from(fileList)
+      .filter((file) => !existingNames.has(file.name))
+      .map((file) => ({
         id: crypto.randomUUID(),
         file,
         preview: URL.createObjectURL(file),
-        valid,
-        error: valid ? null : 'Invalid image (Max 5MB)',
-      }
-    })
+        valid: file.size <= MAX_SIZE,
+        error: file.size <= MAX_SIZE ? null : 'Invalid image (Max 5MB)',
+      }))
 
     setFiles((prev) => [...prev, ...newFiles])
   }

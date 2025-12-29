@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import AdminAddImageModal from '@/components/AdminAddImageModal'
+import api from '@/lib/axios'
 
 const mockImages = {
   data: [
@@ -33,9 +34,8 @@ const mockImages = {
 
 const fetchImages = async () => {
   try {
-    const response = await fetch('/media/get-all')
-    const data = await response.json()
-    return data?.data || []
+    const response = await api.get('/media/get-all')
+    return response?.data || []
   } catch (e) {
     console.error('Get All Images: ', e)
   }
@@ -78,12 +78,7 @@ export default function MediaListPage() {
 
     if (!confirm('Delete selected images?')) return
 
-    await fetch('/media/delete', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(selected),
-    })
-
+    await api.delete('/media/delete-multiple', { ids: selected })
     await loadImages()
   }
 

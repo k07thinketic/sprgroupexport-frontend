@@ -4,7 +4,7 @@ import { useState, useRef } from 'react'
 import Image from 'next/image'
 import api from '@/lib/axios'
 
-export default function MediaUploadModal({ open, onClose }) {
+export default function MediaUploadModal({ open, onClose, onNewImagesAdd }) {
   const [files, setFiles] = useState([])
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -48,52 +48,6 @@ export default function MediaUploadModal({ open, onClose }) {
     if (uploading) return
     addFiles(e.dataTransfer.files)
   }
-  // const handleUpload = () => {
-  //   const validFiles = files.filter((f) => f.valid)
-  //   if (!validFiles.length) return
-
-  //   setUploading(true)
-  //   setProgress(0)
-  //   setStatus('idle')
-  //   setMessage('')
-
-  //   const formData = new FormData()
-  //   validFiles.forEach((f) => formData.append('images', f.file))
-
-  //   const xhr = new XMLHttpRequest()
-  //   xhr.open('POST', `${API_BASE_URL}/media/create`)
-  //   xhr.withCredentials = true
-
-  //   xhr.upload.onprogress = (e) => {
-  //     if (e.lengthComputable) {
-  //       setProgress(Math.round((e.loaded / e.total) * 100))
-  //     }
-  //   }
-
-  //   xhr.onload = () => {
-  //     setUploading(false)
-
-  //     if (xhr.status >= 200 && xhr.status < 300) {
-  //       setStatus('success')
-  //       setMessage('Images uploaded successfully')
-
-  //       setTimeout(() => {
-  //         handleClose()
-  //       }, 800)
-  //     } else {
-  //       setStatus('error')
-  //       setMessage('Upload failed. Please try again.')
-  //     }
-  //   }
-
-  //   xhr.onerror = () => {
-  //     setUploading(false)
-  //     setStatus('error')
-  //     setMessage('Network error. Please try again.')
-  //   }
-
-  //   xhr.send(formData)
-  // }
 
   const handleUpload = async () => {
     const validFiles = files.filter((f) => f.valid)
@@ -124,6 +78,7 @@ export default function MediaUploadModal({ open, onClose }) {
 
       setStatus('success')
       setMessage('Images uploaded successfully')
+      onNewImagesAdd()
 
       setTimeout(() => {
         handleClose()

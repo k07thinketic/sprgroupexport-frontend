@@ -50,7 +50,12 @@ export default function MediaListPage() {
 
     if (!confirm('Delete selected images?')) return
 
-    await api.delete('/media/delete-multiple', { ids: selected })
+    await api.delete('/media/delete-multiple', {
+      data: {
+        ids: selected,
+      },
+    })
+
     await loadImages()
   }
 
@@ -91,6 +96,7 @@ export default function MediaListPage() {
         <AdminAddImageModal
           open={openAddImage}
           onClose={() => setOpenAddImage(false)}
+          onNewImagesAdd={loadImages}
         />
       </div>
 

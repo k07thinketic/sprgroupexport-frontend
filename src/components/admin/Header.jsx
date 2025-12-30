@@ -5,7 +5,6 @@ import Link from 'next/link'
 
 export default function AdminHeader({
   title = 'Admin',
-  breadcrumbs = [],
   actions = [],
   user,
   onToggleSidebar,
@@ -72,27 +71,6 @@ export default function AdminHeader({
               </div>
             )}
           </div>
-        </div>
-      </div>
-      <div className="bg-white text-gray-700 border-b">
-        <div className="px-4 py-2 flex items-center justify-between">
-          <div className="text-lg font-semibold">
-            {breadcrumbs[breadcrumbs.length - 1]?.label || 'Categories'}
-          </div>
-          <nav className="text-sm text-gray-500">
-            {breadcrumbs.map((b, idx) => (
-              <span key={idx}>
-                {idx > 0 && <span className="mx-1">›</span>}
-                {b.href ? (
-                  <Link href={b.href} className="hover:underline">
-                    {b.label}
-                  </Link>
-                ) : (
-                  <span>{b.label}</span>
-                )}
-              </span>
-            ))}
-          </nav>
         </div>
       </div>
     </header>

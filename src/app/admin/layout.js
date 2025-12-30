@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import AdminHeader from '@/components/admin/Header'
 import AdminSidebar from '@/components/admin/Sidebar'
+import PageHeader from '@/components/admin/PageHeader'
 import { useAuth } from '@/context/AuthContext'
 
 export default function AdminLayout({ children }) {
@@ -73,13 +74,14 @@ export default function AdminLayout({ children }) {
     <div className="min-h-screen">
       <AdminHeader
         title="Admin"
-        breadcrumbs={[{ label: 'Dashboard', href: '/admin' }]}
         user={user}
         onToggleSidebar={() => setCollapsed((v) => !v)}
       />
+
       <div className="flex">
         <AdminSidebar collapsed={collapsed} menu={menu} />
         <main className="flex-1 p-4 bg-gray-100 min-h-[calc(100vh-48px)]">
+          <PageHeader menu={menu} />
           <div className="bg-white rounded shadow p-4">{children}</div>
         </main>
       </div>

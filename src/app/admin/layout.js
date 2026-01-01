@@ -13,8 +13,6 @@ export default function AdminLayout({ children }) {
   const { user } = useAuth()
   const menu = getSidebarMenuData(routeMeta)
 
-  console.log(menu)
-
   return (
     <div className="min-h-screen">
       <AdminHeader

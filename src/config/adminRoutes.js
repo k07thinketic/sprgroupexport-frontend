@@ -17,7 +17,7 @@ import {
   FaRegCreditCard,
   FaLaptopCode,
   FaBoxes,
-  FaFileUpload,
+  FaUserEdit,
   FaUpload,
   FaRegGrinStars,
 } from 'react-icons/fa'
@@ -75,6 +75,24 @@ export const routeMeta = [
     parent: '/admin',
     sidebar: true,
     icon: FaUsers,
+  },
+  {
+    key: 'add-customers',
+    path: '/admin/customers/add',
+    label: 'Add Customer',
+    description: 'Add Customer...',
+    parent: '/admin/customers',
+    sidebar: false,
+    icon: FaUsers,
+  },
+  {
+    key: 'edit-customers',
+    path: '/admin/customers/edit/:_id',
+    label: 'Edit Customer',
+    description: 'Edit Customer...',
+    parent: '/admin/customers',
+    sidebar: false,
+    icon: FaUserEdit,
   },
 
   // ===== Catalog =====

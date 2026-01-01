@@ -1,24 +1,20 @@
 import api from '@/lib/axios'
 
-export async function getAllUsers({
-  pageIndex,
-  pageSize,
-  search,
-  sortBy,
-  sortDir,
-  filterBy,
-}) {
-  const params = new URLSearchParams()
+export async function getAllUsers(params) {
+  return await api.get('/auth/get-all-users', {
+    params,
+  })
+}
 
-  params.set('page', String(pageIndex + 1))
-  params.set('limit', String(pageSize))
+export const getCustomer = async (id) => {
+  if (!id) return
+  return await api.get(`/auth/get-user/${id}`)
+}
 
-  if (search) params.set('search', search)
-  if (sortBy) params.set('sort', sortBy)
-  if (sortDir) params.set('direction', sortDir)
-  if (filterBy) params.set('filterBy', filterBy)
+export const addNewCustomer = async (payload) => {
+  return await api.post('/auth/signup', payload)
+}
 
-  const res = await api.get(`/auth/get-all-users?${params.toString()}`)
-
-  return res
+export const updateCustomer = async (id, payload) => {
+  return await api.put('/auth/edit-profile', payload)
 }

@@ -9,7 +9,13 @@ import {
 } from '@tanstack/react-table'
 import { useState } from 'react'
 import TablePagination from './TablePagination'
-import { FaSearch } from 'react-icons/fa'
+import {
+  FaSearch,
+  FaSort,
+  FaSortAlphaDown,
+  FaSortAlphaDownAlt,
+} from 'react-icons/fa'
+import { ImBlocked } from 'react-icons/im'
 
 export function TanstackTable({
   columns,
@@ -85,6 +91,18 @@ export function TanstackTable({
           >
             <FaSearch />
           </button>
+          {filterByValue && search && (
+            <button
+              onClick={() => {
+                onFilterChange('')
+                setSearch('')
+                onSearch?.('')
+              }}
+              className="bg-red-400 disabled:bg-gray-400 text-white px-3 py-1.5 rounded text-sm"
+            >
+              <ImBlocked />
+            </button>
+          )}
         </div>
 
         {actions}
@@ -117,7 +135,13 @@ export function TanstackTable({
                         )}
                         {canSort && (
                           <span className="text-xs text-gray-400">
-                            {dir === 'asc' ? '▲' : dir === 'desc' ? '▼' : '▲▼'}
+                            {dir === 'asc' ? (
+                              <FaSortAlphaDown className="text-black text-sm" />
+                            ) : dir === 'desc' ? (
+                              <FaSortAlphaDownAlt className="text-black text-sm" />
+                            ) : (
+                              <FaSort className="text-black text-sm" />
+                            )}
                           </span>
                         )}
                       </div>

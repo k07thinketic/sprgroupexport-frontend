@@ -5,8 +5,7 @@ import { createColumnHelper } from '@tanstack/react-table'
 import { TanstackTable } from '@/components/admin/TanstackTable'
 import { RowActionsMenu } from '@/components/admin/RowActionMenu'
 import api from '@/lib/axios'
-import { getAddressString, shortenId } from '@/utils/stringUtils'
-import { debounce } from 'lodash'
+import { getAddressString } from '@/utils/stringUtils'
 
 const columnHelper = createColumnHelper()
 
@@ -73,17 +72,33 @@ export default function CustomersPage() {
     pageIndex: 0,
     pageSize: 10,
   })
+  const [totalPages, setTotalPages] = useState({
+    total: 0,
+    totalPages: 1,
+  })
   const [sorting, setSorting] = useState([])
   const [filterBy, setFilterBy] = useState('')
-  const [search, setSearch] = useState('')
 
-  // Fetch customers on mount
-  const getCustomers = async () => {
+  const getCustomers = async (search = '', page) => {
     setIsLoading(true)
+
     try {
-      const res = await api.get('/auth/get-all-users')
-      const normalized = res.map((u, index) => {
+      const sort = sorting[0]
+      const sortType = sort?.desc ? 'desc' : 'asc'
+      const res = await api.get('/auth/get-all-users', {
+        params: {
+          page: page ?? pagination.pageIndex + 1,
+          limit: 3,
+          filterBy: filterBy || undefined,
+          search: search || undefined,
+          sortBy: sort?.id,
+          direction: sort?.id ? sortType : undefined,
+        },
+      })
+
+      const normalized = res.data.map((u) => {
         const defaultAddress = u.shippingAddress?.find((a) => a.isDefault)
+
         return {
           id: u._id,
           name: `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim(),
@@ -92,7 +107,9 @@ export default function CustomersPage() {
           address: getAddressString(defaultAddress) || '-',
         }
       })
+
       setCustomers(normalized)
+      setTotalPages(res.pagination)
     } catch (error) {
       console.error(error)
     } finally {
@@ -102,60 +119,29 @@ export default function CustomersPage() {
 
   useEffect(() => {
     getCustomers()
-  }, [])
-
-  // Memoized filter and sorting logic
-  const filteredData = useMemo(() => {
-    let data = [...customers]
-
-    if (search && filterBy) {
-      const s = search.toLowerCase()
-      data = data.filter((c) => c?.[filterBy]?.toLowerCase().includes(s))
-    }
-
-    if (sorting.length) {
-      const { id, desc } = sorting[0]
-      data.sort((a, b) => {
-        if (a[id] < b[id]) return desc ? 1 : -1
-        if (a[id] > b[id]) return desc ? -1 : 1
-        return 0
-      })
-    }
-
-    return data
-  }, [customers, search, sorting, filterBy])
-
-  const paginatedData = useMemo(() => {
-    const start = pagination.pageIndex * pagination.pageSize
-    return filteredData.slice(start, start + pagination.pageSize)
-  }, [filteredData, pagination])
-
-  const pageCount = Math.ceil(filteredData.length / pagination.pageSize)
-
-  // Debounced search handler
-  const debouncedSearch = useMemo(
-    () => debounce((query) => setSearch(query), 500),
-    [],
-  )
+  }, [pagination.pageIndex, sorting])
 
   return (
     <TanstackTable
       columns={columns}
-      data={paginatedData}
+      data={customers}
       isLoading={isLoading}
       mode="server"
-      pageCount={pageCount}
+      pageCount={totalPages.totalPages}
       pagination={pagination}
       sorting={sorting}
       onPaginationChange={setPagination}
       onSortingChange={setSorting}
-      onSearch={debouncedSearch}
+      onSearch={(val) => {
+        setPagination((p) => ({ ...p, pageIndex: 0 }))
+        getCustomers(val, 1)
+      }}
       filterByValue={filterBy}
       filterByOptions={[
         { label: 'Name', value: 'name' },
         { label: 'Email', value: 'email' },
       ]}
-      onFilterChange={(val) => setFilterBy(val)}
+      onFilterChange={setFilterBy}
       actions={
         <button className="bg-sky-600 text-white px-3 py-1.5 rounded text-sm">
           Add New

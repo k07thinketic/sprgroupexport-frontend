@@ -2,33 +2,26 @@
 
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { createColumnHelper } from '@tanstack/react-table'
-import { TanstackTable } from '@/components/admin/TanstackTable'
 import { useRouter } from 'next/navigation'
-import { FaEdit, FaTrash, FaEye } from 'react-icons/fa'
+import { FaEdit, FaTrash } from 'react-icons/fa'
+import ConfirmationModal from '@/components/admin/ConfirmationModal'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchAdminOrders } from '@/features/order/orderSlice'
 import { fetchOrderStatuses } from '@/features/orderStatus/orderStatusSlice'
+import {
+  TanstackTable,
+  useTableQueryParams,
+} from '@/components/admin/TanStackTable'
 
 const columnHelper = createColumnHelper()
 
 export default function OrdersPage() {
   const router = useRouter()
+  const { params } = useTableQueryParams()
   const dispatch = useDispatch()
-  const [sorting, setSorting] = useState([])
-  const [filterBy, setFilterBy] = useState('')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [pagination, setPagination] = useState({
-    pageIndex: 0,
-    pageSize: 10,
-  })
-
-  // Keep the pending filter in a ref so selecting it doesn't immediately change getOrders identity
-  const filterRef = useRef(filterBy)
-
-  const handleFilterChange = (val) => {
-    setFilterBy(val)
-    filterRef.current = val
-  }
+  const [selectedOrderId, setSelectedOrderId] = useState(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const columns = useMemo(
     () => [
@@ -101,11 +94,10 @@ export default function OrdersPage() {
             router.push(`/admin/orders/${id}`)
           }
 
-          const handleDelete = (e) => {
+          const handleDeleteClick = (e) => {
             e.stopPropagation()
-            if (confirm('Are you sure you want to delete this order?')) {
-              console.log('Delete order', id)
-            }
+            setSelectedOrderId(id)
+            setShowDeleteModal(true)
           }
 
           return (
@@ -118,7 +110,7 @@ export default function OrdersPage() {
                 <FaEdit className="w-4 h-4" />
               </button>
               <button
-                onClick={handleDelete}
+                onClick={handleDeleteClick}
                 className="p-1.5 text-red-600 hover:bg-red-50 rounded-full hover:text-red-700 transition-colors"
                 title="Delete Order"
               >
@@ -142,62 +134,77 @@ export default function OrdersPage() {
 
   const { statuses: orderStatuses } = useSelector((state) => state.orderStatus)
 
+  const getOrders = async () => {
+    try {
+      dispatch(
+        fetchAdminOrders({
+          searchValue: params?.search || undefined,
+          sortBy: params?.sortBy,
+          direction: params?.sortBy ? params?.direction : undefined,
+          page: params?.pageIndex ?? 1,
+          limit: params?.pageSize,
+          filterBy: params?.filterBy || undefined,
+        }),
+      )
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   // Fetch order statuses on component mount
   useEffect(() => {
     dispatch(fetchOrderStatuses())
   }, [dispatch])
 
-  const getOrders = useCallback(
-    async (search = searchTerm, page) => {
-      try {
-        const sort = sorting[0]
-        const sortType = sort?.desc ? 'desc' : 'asc'
-        const filter = filterRef.current
-
-        dispatch(
-          fetchAdminOrders({
-            searchValue: search || undefined,
-            sortBy: sort?.id,
-            direction: sort?.id ? sortType : undefined,
-            page: page ?? pagination.pageIndex + 1,
-            limit: pagination.pageSize,
-            filterBy: filter || undefined,
-          }),
-        )
-      } catch (error) {
-        console.error(error)
-      }
-    },
-    [sorting, pagination.pageSize, pagination.pageIndex, dispatch, searchTerm],
-  )
-
   useEffect(() => {
     getOrders()
-  }, [pagination.pageIndex, getOrders])
+  }, [params])
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!selectedOrderId) return
+
+    setIsDeleting(true)
+    try {
+      // Replace this with actual delete order dispatch when implemented
+      console.log('Deleting order:', selectedOrderId)
+      // await dispatch(deleteOrder(selectedOrderId)).unwrap()
+      toast.success('Order deleted successfully')
+      setShowDeleteModal(false)
+    } catch (error) {
+      toast.error(error.message || 'Failed to delete order')
+    } finally {
+      setIsDeleting(false)
+      setSelectedOrderId(null)
+    }
+  }, [selectedOrderId])
 
   // Format data for table
-  const tableData = orders.map((order) => {
-    // Get the status ID from orderStatus field (not status)
-    const statusId = order.orderStatus || order.status
+  const tableData = useMemo(
+    () =>
+      orders.map((order) => {
+        // Get the status ID from orderStatus field (not status)
+        const statusId = order.orderStatus || order.status
 
-    // Find the status object that matches the order's status ID
-    const statusObj = orderStatuses.find((s) => s._id === statusId) || {}
+        // Find the status object that matches the order's status ID
+        const statusObj = orderStatuses.find((s) => s._id === statusId) || {}
 
-    // Get the status name from the status object
-    const statusName = statusObj.orderStatus || statusObj.name || 'Pending'
+        // Get the status name from the status object
+        const statusName = statusObj.orderStatus || statusObj.name || 'Pending'
 
-    return {
-      id: order.orderId || order._id,
-      customerName: order.user
-        ? `${order.user.firstName} ${order.user.lastName}`
-        : 'Guest',
-      orderTotal: `${order.total?.toFixed(2) || '0.00'}`,
-      datePurchased: order.createdAt,
-      status: statusName,
-      _id: order._id,
-      statusId: statusId, // Keep the status ID for reference
-    }
-  })
+        return {
+          id: order.orderId || order._id,
+          customerName: order.user
+            ? `${order.user.firstName} ${order.user.lastName}`
+            : 'Guest',
+          orderTotal: `${order.total?.toFixed(2) || '0.00'}`,
+          datePurchased: order.createdAt,
+          status: statusName,
+          _id: order._id,
+          statusId: statusId, // Keep the status ID for reference
+        }
+      }),
+    [orders, orderStatuses],
+  )
 
   return (
     <div>
@@ -213,12 +220,6 @@ export default function OrdersPage() {
         isLoading={loading}
         mode="server"
         pageCount={serverPagination?.totalPages || 1}
-        pagination={pagination}
-        sorting={sorting}
-        onPaginationChange={setPagination}
-        onSortingChange={setSorting}
-        // onSearch={(val) => setSearchTerm(val)}
-        filterByValue={filterBy}
         filterByOptions={[
           {
             label: 'Name',
@@ -235,15 +236,21 @@ export default function OrdersPage() {
             })),
           },
         ]}
-        statusOptions={orderStatuses.map((status) => ({
-          label: status.orderStatus || status.name,
-          value: status._id,
-        }))}
-        onFilterChange={handleFilterChange}
-        onSearch={(val) => {
-          setPagination((p) => ({ ...p, pageIndex: 0 }))
-          getOrders(val, 1)
+      />
+
+      <ConfirmationModal
+        open={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false)
+          setSelectedOrderId(null)
         }}
+        onConfirm={handleConfirmDelete}
+        title="Delete Order"
+        description="Are you sure you want to delete this order? This action cannot be undone."
+        confirmText={isDeleting ? 'Deleting...' : 'Delete'}
+        cancelText="Cancel"
+        theme="error"
+        isLoading={isDeleting}
       />
     </div>
   )

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useCallback } from 'react'
+import { useEffect, useMemo, useCallback, useState, Suspense } from 'react'
 import { createColumnHelper } from '@tanstack/react-table'
 import { FaTrash } from 'react-icons/fa'
 import { useDispatch, useSelector } from 'react-redux'
@@ -14,10 +14,15 @@ import {
   TanstackTable,
   useTableQueryParams,
 } from '@/components/admin/TanStackTable'
+import ConfirmationModal from '@/components/admin/ConfirmationModal'
 
 const columnHelper = createColumnHelper()
 
-const ReviewsTable = () => {
+function ReviewsTableContent() {
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [selectedReview, setSelectedReview] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
+
   const dispatch = useDispatch()
   const { params } = useTableQueryParams()
 
@@ -38,26 +43,32 @@ const ReviewsTable = () => {
     }
   }, [dispatch, params])
 
-  const handleDelete = useCallback(
-    async (review) => {
-      if (!window.confirm('Are you sure you want to delete this review?')) {
-        return
-      }
-      try {
-        await dispatch(
-          deleteReview({
-            productId: review.productId,
-            reviewId: review._id,
-          }),
-        ).unwrap()
-        toast.success('Review deleted successfully')
-        getReviews()
-      } catch (error) {
-        toast.error(error?.message || 'Failed to delete review')
-      }
-    },
-    [dispatch, getReviews],
-  )
+  const handleDelete = useCallback((review) => {
+    setSelectedReview(review)
+    setShowDeleteModal(true)
+  }, [])
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!selectedReview) return
+
+    setDeletingId(selectedReview._id)
+    try {
+      await dispatch(
+        deleteReview({
+          productId: selectedReview.productId,
+          reviewId: selectedReview._id,
+        }),
+      ).unwrap()
+      toast.success('Review deleted successfully')
+      setShowDeleteModal(false)
+      setSelectedReview(null)
+      getReviews()
+    } catch (error) {
+      toast.error(error?.message || 'Failed to delete review')
+    } finally {
+      setDeletingId(null)
+    }
+  }, [dispatch, selectedReview, getReviews])
 
   const columns = useMemo(
     () => [
@@ -132,13 +143,13 @@ const ReviewsTable = () => {
     ],
     [handleDelete],
   )
-
+  const reviewsData = useSelector(selectAllReviews)
   const {
-    data: reviewsData,
+    data,
     pagination: apiPagination,
     isLoading,
-    error,
   } = useSelector(selectAllReviews)
+  const error = useSelector((state) => state.reviews.error)
 
   useEffect(() => {
     getReviews()
@@ -153,13 +164,34 @@ const ReviewsTable = () => {
       <h2 className="text-2xl font-semibold mb-4">List of Reviews</h2>
       <TanstackTable
         columns={columns}
-        data={reviewsData || []}
+        data={data || []}
         isLoading={isLoading}
         mode="server"
         pageCount={apiPagination?.totalPages || 1}
+      />
+
+      <ConfirmationModal
+        open={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false)
+          setSelectedReview(null)
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Delete Review"
+        description="Are you sure you want to delete this review? This action cannot be undone."
+        confirmText={deletingId ? 'Deleting...' : 'Delete'}
+        cancelText="Cancel"
+        theme="error"
+        isLoading={!!deletingId}
       />
     </div>
   )
 }
 
-export default ReviewsTable
+export default function ReviewsTable() {
+  return (
+    <Suspense fallback={<div className="p-6">Loading...</div>}>
+      <ReviewsTableContent />
+    </Suspense>
+  )
+}

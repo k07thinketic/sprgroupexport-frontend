@@ -39,9 +39,8 @@ export default function OrderDetailPage() {
       // Fetch order status
       if (orderData.orderStatus) {
         try {
-          const statusResponse = await api.get(
-            `/order-status/${orderData.orderStatus}`,
-          )
+          const statusId = orderData.orderStatus?._id || orderData.orderStatus
+          const statusResponse = await api.get(`/order-status/${statusId}`)
           setOrderStatus(statusResponse.data.orderStatus)
         } catch (err) {
           console.error('Error fetching order status:', err)
@@ -74,12 +73,13 @@ export default function OrderDetailPage() {
     // Fetch product details for each item in the order
     const fetchProducts = async (items) => {
       try {
-        const productPromises = items.map((item) =>
-          fetchProductById(item.productId)
+        const productPromises = items.map((item) => {
+          const productId = item.productId?._id || item.productId
+          return fetchProductById(productId)
             .then((response) => {
               const productData = response?.data || response
               return {
-                _id: productData._id || item.productId,
+                _id: productData._id || productId,
                 name: productData.productName || 'Product',
                 salePrice: productData.price || 0,
                 sku: productData.sku || '',
@@ -100,9 +100,9 @@ export default function OrderDetailPage() {
               }
             })
             .catch((err) => {
-              console.error(`Error fetching product ${item.productId}:`, err)
+              console.error(`Error fetching product ${productId}:`, err)
               return {
-                _id: item.productId,
+                _id: productId,
                 name: 'Product not found',
                 salePrice: 0,
                 sku: '',
@@ -111,8 +111,8 @@ export default function OrderDetailPage() {
                 quantity: item.quantity,
                 orderItemId: item._id,
               }
-            }),
-        )
+            })
+        })
 
         const productsData = await Promise.all(productPromises)
         setProducts(productsData)
@@ -134,6 +134,14 @@ export default function OrderDetailPage() {
         const data = response.data
 
         // Format order data
+        const resolvedStatus =
+          orderStatus ||
+          data.orderStatus?.orderStatus ||
+          data.status ||
+          'Pending'
+        const resolvedPaymentStatus =
+          data.paymentStatus?.paymentStatus || data.paymentStatus || 'Pending'
+
         const formattedOrder = {
           ...data,
           orderId: data._id || data.orderId,
@@ -155,11 +163,12 @@ export default function OrderDetailPage() {
           tax: data.tax || 0,
           shipping: data.shippingCost || 0,
           total: data.total || 0,
-          status: orderStatus || data.status || 'Pending',
+          status: resolvedStatus,
+          paymentStatus: resolvedPaymentStatus,
           statusHistory: data.statusHistory || [
             {
               date: data.createdAt || new Date().toISOString(),
-              status: data.status || 'Pending',
+              status: resolvedStatus,
               comment: 'Order placed',
             },
           ],
@@ -167,12 +176,12 @@ export default function OrderDetailPage() {
         }
 
         setOrder(formattedOrder)
-        setStatus(data.status || 'Pending')
+        setStatus(resolvedStatus)
         setStatusHistory(
           data.statusHistory || [
             {
               date: data.createdAt || new Date().toISOString(),
-              status: data.status || 'Pending',
+              status: resolvedStatus,
               comment: 'Order placed',
             },
           ],

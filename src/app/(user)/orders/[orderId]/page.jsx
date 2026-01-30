@@ -64,15 +64,23 @@ export default function OrderDetailsPage() {
       typeof categoryId === 'object'
         ? categoryId?.name
         : getCategoryNameById(categoryId)
+    const resolvedProductName =
+      product?.productName || item.productId?.productName || 'Product Not Found'
     return {
       ...item,
       product: {
         ...(product || {}),
         _id: item.productId?._id,
-        name: item.productId?.productName || 'Product Not Found',
+        name: resolvedProductName,
+        productName: resolvedProductName,
         image: item.productId?.image || null,
         price: item.productId?.price || 0,
-        sku: item.productId?.sku || 'N/A',
+        sku:
+          product?.sku ||
+          item.productId?.sku ||
+          item.productId?.productModel ||
+          item.sku ||
+          'N/A',
         category: categoryName || 'Uncategorized',
       },
       quantity: item.quantity || 1,
@@ -235,7 +243,7 @@ export default function OrderDetailsPage() {
           </button>
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-900">
-              Order ({order.products?.length || 0})
+              Order Items ({order.products?.length || 0})
             </h1>
             <div className="flex flex-col items-end gap-2 text-right">
               <span className="text-sm text-gray-500">
@@ -266,7 +274,7 @@ export default function OrderDetailsPage() {
               <div className="px-6 py-4 border-b border-gray-200">
                 <h2 className="text-lg font-medium text-gray-900 flex items-center">
                   <FiPackage className="mr-2 text-[#BA8B4E]" />
-                  Order Items ({order.products?.length || 0})
+                  Order
                 </h2>
               </div>
               <div className="divide-y divide-gray-200">
@@ -520,7 +528,7 @@ export default function OrderDetailsPage() {
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-500">Subtotal</span>
                     <span className="text-sm font-medium text-gray-900">
-                      ₹{order.subtotal?.toFixed(2) || '0.00'}
+                      ₹{order.total?.toFixed(2) || '0.00'}
                     </span>
                   </div>
                   <div className="flex justify-between">

@@ -28,13 +28,10 @@ export default function OrderDetail({
   // Fetch payment methods from API
   useEffect(() => {
     const fetchPaymentMethods = async () => {
-      console.log('Starting to fetch payment methods...')
       try {
         const response = await paymentService.getAllPaymentMethods()
-        console.log('API response:', response)
         // API returns array directly, not nested under status/data
         if (Array.isArray(response)) {
-          console.log('Payment methods data:', response)
           setPaymentMethods(response)
         } else {
           console.log('Response is not an array:', response)
@@ -76,31 +73,20 @@ export default function OrderDetail({
   const handleSubmit = async (e) => {
     e?.preventDefault?.() // Safely call preventDefault if e exists
 
-    console.log('=== handleSubmit called ===')
-    console.log('Current paymentMethod state:', paymentMethod)
-    console.log(
-      'Payment methods available:',
-      paymentMethods.map((m) => ({ name: m.name, type: m.type })),
-    )
-
     // If PayPal is selected, process payment and redirect
     if (paymentMethod === 'paypal') {
-      console.log('✅ PayPal branch activated')
       try {
         // Calculate total amount
         const totalAmount = displayItems.reduce((total, item) => {
           return total + item.price * (item.quantity || 1)
         }, 0)
-        console.log('Total amount calculated:', totalAmount)
 
         // Find PayPal payment method ID
         const paypalMethodId = paymentMethods.find(
           (m) => m.type?.toUpperCase() === 'PAYPAL',
         )?._id
-        console.log('PayPal method ID found:', paypalMethodId)
 
         if (!paypalMethodId) {
-          console.error('❌ PayPal method ID not found!')
           alert(
             'PayPal payment method not found. Please select a different payment method.',
           )
@@ -154,7 +140,6 @@ export default function OrderDetail({
 
         // Store order data in localStorage for PayPal success page
         localStorage.setItem('pendingPayPalOrder', JSON.stringify(orderData))
-        console.log('Order data stored for PayPal:', orderData)
 
         // Call PayPal payment processing API - use uppercase 'PAYPAL' to match backend enum
         const response = await api.post('/payments/process/PAYPAL', {
@@ -167,9 +152,6 @@ export default function OrderDetail({
           total: totalAmount,
         })
 
-        console.log('✅ PayPal API response received:', response)
-        console.log('Response data:', response.data)
-
         // The URL is directly in the response object, not in response.data
         const paypalUrl = response.url
 
@@ -178,12 +160,10 @@ export default function OrderDetail({
           window.location.href = paypalUrl
           return // Don't proceed to onContinue for PayPal
         } else {
-          console.error('❌ No URL in PayPal response')
           console.error('Full response:', response)
           alert('PayPal redirect URL not received. Please try again.')
         }
       } catch (error) {
-        console.error('❌ PayPal payment processing failed:', error)
         console.error('Error details:', error.response?.data || error.message)
         // Show error message to user
         alert(
@@ -196,15 +176,10 @@ export default function OrderDetail({
       console.log('❌ PayPal not selected, current method:', paymentMethod)
     }
 
-    // For other payment methods (COD, Razorpay) - use normal flow
-    console.log('📦 Using normal order flow for:', paymentMethod)
-
     // Find the payment method ID based on the selected payment method type
     const selectedPaymentMethodId = paymentMethods.find(
       (m) => m.type?.toLowerCase() === paymentMethod.toLowerCase(),
     )?._id
-
-    console.log('Selected payment method ID:', selectedPaymentMethodId)
 
     onContinue(
       {

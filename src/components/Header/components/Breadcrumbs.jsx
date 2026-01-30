@@ -38,7 +38,7 @@ const Breadcrumbs = ({ productName }) => {
         pathname.includes('/orders/') &&
         /^[0-9a-fA-F]{24}$/.test(segment)
       ) {
-        label = 'Product Details'
+        label = 'Order Details'
       }
       // If this is a product ID and we have a product name from URL params, use that
       else if (isLast && productName && /^[0-9a-fA-F]{24}$/.test(segment)) {

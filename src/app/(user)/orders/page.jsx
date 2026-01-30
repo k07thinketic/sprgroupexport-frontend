@@ -114,16 +114,24 @@ export default function OrdersPage() {
       typeof categoryId === 'object'
         ? categoryId?.name
         : getCategoryNameById(categoryId)
+    const resolvedProductName =
+      product?.productName || item.productId?.productName || 'Product Not Found'
     return {
       ...item,
       product: {
         ...(product || {}),
         _id: item.productId?._id,
-        name: item.productId?.productName || 'Product Not Found',
+        name: resolvedProductName,
+        productName: resolvedProductName,
         image: item.productId?.image || null,
         price: item.productId?.price || 0,
         category: categoryName || 'Uncategorized',
-        sku: item.productId?.sku || 'N/A',
+        sku:
+          product?.sku ||
+          item.productId?.sku ||
+          item.productId?.productModel ||
+          item.sku ||
+          'N/A',
         description: item.productId?.description || '',
       },
       quantity: item.quantity || 1,

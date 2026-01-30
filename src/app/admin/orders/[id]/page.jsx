@@ -22,6 +22,7 @@ export default function OrderDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [status, setStatus] = useState('')
+  const [statusId, setStatusId] = useState('')
   const [comment, setComment] = useState('')
   const [statusHistory, setStatusHistory] = useState([])
   const [shippingAddress, setShippingAddress] = useState(null)
@@ -33,6 +34,8 @@ export default function OrderDetailPage() {
     products: true,
   })
 
+  const isValidObjectId = (value) => /^[a-fA-F0-9]{24}$/.test(value)
+
   // Fetch additional order details
   const fetchOrderDetails = async (orderData) => {
     try {
@@ -40,8 +43,12 @@ export default function OrderDetailPage() {
       if (orderData.orderStatus) {
         try {
           const statusId = orderData.orderStatus?._id || orderData.orderStatus
-          const statusResponse = await api.get(`/order-status/${statusId}`)
-          setOrderStatus(statusResponse.data.orderStatus)
+          if (isValidObjectId(statusId)) {
+            const statusResponse = await api.get(`/order-status/${statusId}`)
+            setOrderStatus(statusResponse.data.orderStatus)
+          } else {
+            setOrderStatus(statusId)
+          }
         } catch (err) {
           console.error('Error fetching order status:', err)
         }
@@ -139,6 +146,9 @@ export default function OrderDetailPage() {
           data.orderStatus?.orderStatus ||
           data.status ||
           'Pending'
+        const resolvedStatusId =
+          data.orderStatus?._id ||
+          (isValidObjectId(data.orderStatus) ? data.orderStatus : '')
         const resolvedPaymentStatus =
           data.paymentStatus?.paymentStatus || data.paymentStatus || 'Pending'
 
@@ -177,6 +187,7 @@ export default function OrderDetailPage() {
 
         setOrder(formattedOrder)
         setStatus(resolvedStatus)
+        setStatusId(resolvedStatusId)
         setStatusHistory(
           data.statusHistory || [
             {
@@ -217,7 +228,7 @@ export default function OrderDetailPage() {
 
     try {
       // Call the updateOrderStatus API with status ID
-      await updateOrderStatus(id, { id: status, comment })
+      await updateOrderStatus(id, { id: statusId, comment })
 
       // Update local state
       const newStatusEntry = {
@@ -322,7 +333,8 @@ export default function OrderDetailPage() {
         {/* Right column - Status update and history */}
         <div className="space-y-6">
           <StatusUpdateForm
-            status={status}
+            statusId={statusId}
+            setStatusId={setStatusId}
             setStatus={setStatus}
             comment={comment}
             setComment={setComment}

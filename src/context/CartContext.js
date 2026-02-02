@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { cartService } from '@/services/cartService'
+import { useAuth } from './AuthContext'
 
 const CartContext = createContext({})
 
@@ -12,7 +13,7 @@ export function CartProvider({ children }) {
   const [error, setError] = useState(null)
 
   // Transform API response to cart format
-  const transformCartData = useCallback((response) => {
+  const transformCartData = (response) => {
     return Array.isArray(response) ? response.map(item => ({
       id: item.product._id,
       _id: item.product._id,
@@ -23,16 +24,16 @@ export function CartProvider({ children }) {
       quantity: item.quantity, // Default quantity
       product: item.product
     })) : []
-  }, [])
+  }
 
   // Update cart count
-  const updateCartCount = useCallback((cartItems) => {
+  const updateCartCount = (cartItems) => {
     const count = cartItems.reduce((total, item) => total + (item.quantity || 1), 0)
     setCartCount(count)
-  }, [])
+  }
 
   // Fetch cart data from API
-  const fetchCart = useCallback(async () => {
+  const fetchCart = async () => {
     setIsLoading(true)
     try {
       const response = await cartService.getCart()
@@ -48,7 +49,7 @@ export function CartProvider({ children }) {
     } finally {
       setIsLoading(false)
     }
-  }, [transformCartData, updateCartCount])
+  }
 
   // Add item to cart
   const addToCart = async (product, quantity = 1) => {
@@ -57,23 +58,23 @@ export function CartProvider({ children }) {
     try {
       const productId = product._id || product.id
       await cartService.addToCart(productId, quantity)
-      
+
       // Optimistically update the cart
       setCart(prevCart => {
         const existingItem = prevCart.find(item => item.id === productId)
         let newCart
         if (existingItem) {
-          newCart = prevCart.map(item => 
-            item.id === productId 
+          newCart = prevCart.map(item =>
+            item.id === productId
               ? { ...item, quantity: (item.quantity || 1) + quantity }
               : item
           )
         } else {
-          newCart = [...prevCart, { 
-            ...product, 
-            id: productId, 
-            _id: productId, 
-            quantity 
+          newCart = [...prevCart, {
+            ...product,
+            id: productId,
+            _id: productId,
+            quantity
           }]
         }
         updateCartCount(newCart)
@@ -102,7 +103,7 @@ export function CartProvider({ children }) {
         updateCartCount(newCart)
         return newCart
       })
-      
+
       await cartService.removeFromCart(productId)
       return await fetchCart()
     } catch (err) {
@@ -122,7 +123,7 @@ export function CartProvider({ children }) {
       // If quantity is less than 1, remove the item
       return await removeFromCart(productId);
     }
-    
+
     setIsLoading(true)
     setError(null)
     try {
@@ -142,19 +143,19 @@ export function CartProvider({ children }) {
           }
         }
       }
-      
+
       // Then update the local state
       setCart(prevCart => {
-        const newCart = prevCart.map(item => 
-          item.id === productId 
+        const newCart = prevCart.map(item =>
+          item.id === productId
             ? { ...item, quantity: newQuantity }
             : item
         ).filter(item => item.quantity > 0); // Remove items with quantity <= 0
-        
+
         updateCartCount(newCart)
         return newCart
       })
-      
+
       // Return the updated cart
       return cart;
     } catch (err) {
@@ -175,7 +176,7 @@ export function CartProvider({ children }) {
       // Optimistically clear the cart
       setCart([])
       setCartCount(0)
-      
+
       await cartService.removeAllFromCart()
     } catch (err) {
       console.error('Error clearing cart:', err)
@@ -213,10 +214,16 @@ export function CartProvider({ children }) {
     }, 0)
   }, [cart])
 
-  // Fetch cart data on component mount
+  // Get auth context
+  const { user } = useAuth()
   useEffect(() => {
-    fetchCart()
-  }, [fetchCart])
+    if (user?.accessToken) {
+      fetchCart()
+    } else {
+      setCart([])
+      setCartCount(0)
+    }
+  }, [user?.accessToken])
 
   return (
     <CartContext.Provider

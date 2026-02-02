@@ -11,6 +11,7 @@ import {
 } from '@/features/auth/guestAuthSlice'
 import { authService } from '@/features/auth/authService'
 import { useAuth } from '@/context/AuthContext'
+import { toast } from '@/utils/toastConfig'
 
 const OTP_LENGTH = 6
 
@@ -197,16 +198,26 @@ export default function AuthModal({ isOpen, onClose, switchToEmail = false }) {
   // Handle email submission
   const handleEmailSubmit = async (e) => {
     e.preventDefault()
-    if (!email) return
+    if (!email) {
+      toast.error('Please enter your email address')
+      return
+    }
 
     try {
       setIsVerifying(true)
       const result = await dispatch(guestLogin(email))
+      
       if (guestLogin.fulfilled.match(result)) {
+        toast.success('OTP sent successfully! Please check your email.')
         setShowOtpInput(true)
+      } else if (guestLogin.rejected.match(result)) {
+        // Handle rejected case from Redux thunk
+        const errorMessage = result.payload || 'Failed to send OTP. Please try again.'
+        toast.error(errorMessage)
       }
     } catch (error) {
       console.error('Failed to send OTP:', error)
+      toast.error(error.message || 'Failed to send OTP. Please try again.')
     } finally {
       setIsVerifying(false)
     }

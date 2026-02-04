@@ -134,13 +134,6 @@ export default function OrderDetail({
 
         // Prepare order data to be stored for later creation after PayPal success
 
-        if (!shippingAddress.shippingAddress) {
-          alert(
-            'Shipping address not found. Please go back and select a shipping address.',
-          )
-          return
-        }
-
         const orderData = {
           user: user._id,
           shippingMethod: shippingMethod._id,

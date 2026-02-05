@@ -17,6 +17,8 @@ import reviewsReducer from '../features/reviews/reviewsSlice'
 import stockReducer from '../features/stock/stockSlice'
 import caratReducer from '../features/carat/caratSlice'
 import settingsReducer from '../features/setting/settingSlice'
+import parallaxBannerReducer from '../features/parallax-banner/parallaxBannerSlice'
+import goldSlice from '@/features/gold/goldSlice'
 
 export const store = configureStore({
   reducer: {
@@ -27,6 +29,7 @@ export const store = configureStore({
     categoryDetails: categoryDetailsReducer,
     categories: categoriesReducer,
     settings: settingsReducer,
+    parallaxBanner: parallaxBannerReducer,
     user: userReducer,
     shippingAddress: shippingAddressReducer,
     shipping: shippingReducer,
@@ -38,5 +41,6 @@ export const store = configureStore({
     reviews: reviewsReducer,
     stock: stockReducer,
     carat: caratReducer,
+    gold: goldSlice,
   },
 })

@@ -159,7 +159,7 @@ export default function OrderDetail({
         const response = await api.post('/payments/process/PAYPAL', {
           orderId: tempOrderId, // Temporary order ID
           amount: totalAmount,
-          currency: 'USD',
+          currency: 'INR',
           userId: user._id,
           paymentMethodId: paypalMethodId,
           products: displayItems,
@@ -226,7 +226,6 @@ export default function OrderDetail({
             })
 
             if (verifyRes?.success) {
-              alert('Payment verification successful!')
               toast.success('Payment successful! Order placed 🎉')
               const selectedPaymentMethodId = paymentMethods.find(
                 (m) => m.type?.toLowerCase() === 'razorpay',

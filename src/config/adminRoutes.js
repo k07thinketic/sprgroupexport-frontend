@@ -328,6 +328,7 @@ export const routeMeta = [
     key: 'website-settings',
     label: 'Settings (Website)',
     sidebar: true,
+    parent: '/admin',
     icon: FaLaptopCode,
     sidebarChildrens: [
       '/admin/settings/website/slider-images',
@@ -351,6 +352,7 @@ export const routeMeta = [
     key: 'parallax-banners',
     path: '/admin/settings/website/parallax-banners',
     label: 'Parallax Banners',
+    description: 'Listing The Home Banners...',
     parent: '/admin/settings/website',
     sidebar: true,
     icon: FaImages,

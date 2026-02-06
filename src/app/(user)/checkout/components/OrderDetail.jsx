@@ -72,6 +72,7 @@ export default function OrderDetail({
     }
   }
   const handlePaymentMethodChange = (method) => {
+    console.log('method????', method)
     setPaymentMethod(method)
     if (paymentError) setPaymentError('')
     // Notify parent component about the payment method change
@@ -140,7 +141,7 @@ export default function OrderDetail({
           user: user._id,
           shippingMethod: shippingMethod._id,
           shippingCost: shippingMethod.price || 0,
-          shippingAddressId: shippingAddress.shippingAddress._id,
+          shippingAddressId: shippingAddress._id,
           products: displayItems.map((item) => ({
             productId: item.id,
             quantity: item.quantity || 1,
@@ -167,6 +168,8 @@ export default function OrderDetail({
           products: displayItems,
           total: totalAmount,
         })
+
+        console.log('response???', response)
 
         // The URL is directly in the response object, not in response.data
         const paypalUrl = response.url

@@ -3,12 +3,11 @@
 import { useEffect, useState, useCallback, Suspense } from 'react'
 import { createColumnHelper } from '@tanstack/react-table'
 import { useRouter } from 'next/navigation'
-import { FaEdit, FaCheck } from 'react-icons/fa'
+import { FaEdit } from 'react-icons/fa'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   fetchShippingMethods,
   deleteShippingMethods,
-  updateShippingMethods,
 } from '@/features/shipping-method/shippingMethodSlice'
 import { toast } from '@/utils/toastConfig'
 import { TanstackTable } from '@/components/admin/TanStackTable'
@@ -46,67 +45,7 @@ const ShippingMethodsTableContent = () => {
     }
   }, [selectedMethodId, dispatch])
 
-  const handleSetDefault = async (selectedId) => {
-    try {
-      const updates = methods.map((method) => {
-        if (method._id === selectedId) {
-          return dispatch(
-            updateShippingMethods({
-              id: method._id,
-              data: {
-                isDefault: true,
-                status: 'active',
-              },
-            }),
-          )
-        }
-
-        if (method.isDefault) {
-          return dispatch(
-            updateShippingMethods({
-              id: method._id,
-              data: {
-                isDefault: false,
-                status: 'inactive',
-              },
-            }),
-          )
-        }
-
-        return null
-      })
-
-      await Promise.all(updates.filter(Boolean).map((a) => a.unwrap()))
-
-      toast.success('Default shipping method updated')
-      dispatch(fetchShippingMethods())
-    } catch (error) {
-      toast.error(error?.message || 'Failed to update default method')
-    }
-  }
-
   const columns = [
-    columnHelper.accessor('isDefault', {
-      header: 'Default',
-      cell: (info) =>
-        info.getValue() ? (
-          <span className="text-green-600">
-            <FaCheck className="inline mr-1" /> Yes
-          </span>
-        ) : (
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              handleSetDefault(info.row.original._id)
-            }}
-            className="text-blue-600 hover:text-blue-800 text-sm"
-          >
-            Set Default
-          </button>
-        ),
-      enableSorting: false,
-    }),
-
     columnHelper.accessor('name', {
       header: 'Shipping Title',
       enableSorting: true,

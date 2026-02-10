@@ -14,6 +14,8 @@ import CustomerInformation from '@/components/admin/orders/order-page/CustomerIn
 import OrderItems from '@/components/admin/orders/order-page/OrderItems'
 import StatusUpdateForm from '@/components/admin/orders/order-page/UpdateStatusForm'
 import StatusHistory from '@/components/admin/orders/order-page/StatusHistory'
+import AdminOnlyCommentSection from '@/components/admin/orders/order-page/AdminOnlyCommentSection'
+import ShippingDetailsSection from '@/components/admin/orders/order-page/ShippingDetailsSection'
 import { FiCopy } from 'react-icons/fi'
 
 export default function OrderDetailPage() {
@@ -29,6 +31,7 @@ export default function OrderDetailPage() {
   const [shippingAddress, setShippingAddress] = useState(null)
   const [orderStatus, setOrderStatus] = useState(null)
   const [products, setProducts] = useState([])
+  const [latestAdminComment, setLatestAdminComment] = useState(null)
   const [loadingDetails, setLoadingDetails] = useState({
     shippingAddress: true,
     orderStatus: true,
@@ -199,6 +202,10 @@ export default function OrderDetailPage() {
           ],
         )
 
+        if (data.onlyAdminComment && data.onlyAdminComment.length > 0) {
+          setLatestAdminComment(data.onlyAdminComment[0])
+        }
+
         // Fetch product details for each item
         if (data.products && data.products.length > 0) {
           fetchProducts(data.products)
@@ -360,6 +367,33 @@ export default function OrderDetailPage() {
             setComment={setComment}
             handleStatusUpdate={handleStatusUpdate}
             router={router}
+          />
+          <AdminOnlyCommentSection
+            orderId={id}
+            initialComment={latestAdminComment}
+            onCommentUpdated={(updated) => {
+              setLatestAdminComment(updated)
+              setOrder((prev) => ({
+                ...prev,
+                originalData: {
+                  ...prev.originalData,
+                  onlyAdminComment: [updated],
+                },
+              }))
+            }}
+          />
+          <ShippingDetailsSection
+            orderId={id}
+            initialCourier={order.originalData?.shippingCourier}
+            onCourierUpdated={(newCourier) => {
+              setOrder((prev) => ({
+                ...prev,
+                originalData: {
+                  ...prev.originalData,
+                  shippingCourier: newCourier,
+                },
+              }))
+            }}
           />
           <StatusHistory statusHistory={statusHistory} />
         </div>

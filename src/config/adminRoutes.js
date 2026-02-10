@@ -330,6 +330,13 @@ export const routeMeta = [
     parent: '/admin',
     icon: FaRegFileAlt,
   },
+  {
+    key: 'view-customer-order-history',
+    path: '/admin/customer-reports/view',
+    label: 'View Customer Order History',
+    parent: '/admin/customer-reports',
+    icon: FaRegFileAlt,
+  },
 
   // ===== Coupons =====
   {

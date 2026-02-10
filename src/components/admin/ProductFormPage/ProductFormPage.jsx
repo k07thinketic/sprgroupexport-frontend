@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useForm, FormProvider } from 'react-hook-form'
+import { useForm, FormProvider, Controller } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useRouter } from 'next/navigation'
 import { useDispatch, useSelector } from 'react-redux'
@@ -18,6 +18,7 @@ import { FormAdminInputRow } from '../AdminInputRow/AdminInputRow'
 import { FormAdminSelect } from '../AdminSelect/AdminSelect'
 import FileUploadButton from '../FileUploadButton/FileUploadButton'
 import * as yup from 'yup'
+import AdminTextAreaRow from '@/components/AdminTextAreaRow/AdminTextAreaRow'
 
 const productSchema = (isEdit = false) => {
   return yup.object({
@@ -44,7 +45,7 @@ const productSchema = (isEdit = false) => {
       .required('Stock is required')
       .integer('Stock must be a whole number')
       .default(0),
-    model: yup.string(),
+    productModel: yup.string(),
     carat: yup.string().when('category', {
       is: 'gold',
       then: (schema) => schema.required('Carat is required for gold products'),
@@ -67,9 +68,11 @@ const productSchema = (isEdit = false) => {
         if (isEdit) return true
         return value && (value instanceof File || value)
       }),
-    videoEmbedCode: yup.string(),
-    isOnSale: yup.boolean().default(false),
-    isSpecial: yup.boolean().default(false),
+    sideImages: yup
+      .array()
+      .max(6, 'You can upload maximum 6 side images.')
+      .default([]),
+    videoEmbedLink: yup.string(),
     productName: yup.string().required('Product name is required'),
     description: yup.string().required('Description is required'),
   })
@@ -78,6 +81,8 @@ const productSchema = (isEdit = false) => {
 const ProductFormPage = ({ mode = 'add', productId, defaultValues, title }) => {
   const router = useRouter()
   const dispatch = useDispatch()
+
+  const MAX_SIDE_IMAGES = 6
 
   // Get categories from Redux store
   const { allCategories } = useSelector((state) => state.categories)
@@ -174,8 +179,6 @@ const ProductFormPage = ({ mode = 'add', productId, defaultValues, title }) => {
       image: null,
       sideImages: [],
       videoEmbedLink: '',
-      flashSale: false,
-      special: false,
       productName: '',
       description: '',
       ...defaultValues,
@@ -203,7 +206,7 @@ const ProductFormPage = ({ mode = 'add', productId, defaultValues, title }) => {
         toast.error('Failed to calculate gold price')
       }
     },
-    [dispatch]
+    [dispatch],
   )
 
   useEffect(() => {
@@ -377,18 +380,31 @@ const ProductFormPage = ({ mode = 'add', productId, defaultValues, title }) => {
 
   const handleSideImagesSelect = (newImages) => {
     // If newImages is a single image, convert it to an array
-    const imagesArray = Array.isArray(newImages) ? newImages : [newImages];
-    
+    const imagesArray = Array.isArray(newImages) ? newImages : [newImages]
+
     // Combine existing images with new ones, avoiding duplicates
-    const updatedImages = [...selectedSideImages];
-    imagesArray.forEach(img => {
-      if (!updatedImages.some(existingImg => existingImg._id === img._id)) {
-        updatedImages.push(img);
+    const updatedImages = [...selectedSideImages]
+    imagesArray.forEach((img) => {
+      if (updatedImages.length >= MAX_SIDE_IMAGES) return
+      if (!updatedImages.some((existingImg) => existingImg._id === img._id)) {
+        updatedImages.push(img)
       }
-    });
-    
-    setSelectedSideImages(updatedImages);
-    setValue('sideImages', updatedImages, { shouldValidate: true });
+    })
+
+    if (updatedImages.length >= MAX_SIDE_IMAGES && imagesArray.length > 0) {
+      const attemptedNewCount = imagesArray.filter(
+        (img) =>
+          !selectedSideImages.some(
+            (existingImg) => existingImg._id === img._id,
+          ),
+      ).length
+      if (selectedSideImages.length + attemptedNewCount > MAX_SIDE_IMAGES) {
+        toast.error(`You can upload maximum ${MAX_SIDE_IMAGES} side images.`)
+      }
+    }
+
+    setSelectedSideImages(updatedImages)
+    setValue('sideImages', updatedImages, { shouldValidate: true })
   }
 
   const removeSideImage = (index) => {
@@ -453,7 +469,12 @@ const ProductFormPage = ({ mode = 'add', productId, defaultValues, title }) => {
     } else {
       // For new product, include all fields
       Object.entries(data).forEach(([key, value]) => {
-        if (key !== 'image' && key !== 'sideImages' && value !== null && value !== undefined) {
+        if (
+          key !== 'image' &&
+          key !== 'sideImages' &&
+          value !== null &&
+          value !== undefined
+        ) {
           if (typeof value === 'object' && !(value instanceof File)) {
             formData.append(key, JSON.stringify(value))
           } else if (typeof value === 'boolean') {
@@ -623,7 +644,7 @@ const ProductFormPage = ({ mode = 'add', productId, defaultValues, title }) => {
 
             {/* Model */}
             <FormAdminInputRow
-              name="model"
+              name="productModel"
               label="Model"
               placeholder="Product model"
               fullWidth
@@ -660,10 +681,10 @@ const ProductFormPage = ({ mode = 'add', productId, defaultValues, title }) => {
                   fullWidth
                   disabled={caratLoading || caratData === null}
                   onBlur={async (e) => {
-                    const caratValue = e.target.value;
-                    const gramValue = parseFloat(watch('gram') || 0);
+                    const caratValue = e.target.value
+                    const gramValue = parseFloat(watch('gram') || 0)
                     if (caratValue && gramValue > 0) {
-                      await handleGoldPriceCalculation(caratValue, gramValue);
+                      await handleGoldPriceCalculation(caratValue, gramValue)
                     }
                   }}
                   onChange={(e) => {
@@ -675,7 +696,7 @@ const ProductFormPage = ({ mode = 'add', productId, defaultValues, title }) => {
                         setSelectedCarat({
                           carat: carat.carat,
                           pricePerGram: carat.pricePerGram,
-                        })
+                        }),
                       )
                     }
                     setValue('carat', e.target.value, { shouldValidate: true })
@@ -693,15 +714,15 @@ const ProductFormPage = ({ mode = 'add', productId, defaultValues, title }) => {
                   required={isGoldCategory}
                   fullWidth
                   onBlur={async (e) => {
-                    const gramValue = parseFloat(e.target.value) || 0;
-                    const caratValue = watch('carat');
+                    const gramValue = parseFloat(e.target.value) || 0
+                    const caratValue = watch('carat')
                     if (caratValue && gramValue > 0) {
-                      await handleGoldPriceCalculation(caratValue, gramValue);
+                      await handleGoldPriceCalculation(caratValue, gramValue)
                     }
                   }}
                   onChange={(e) => {
-                    const gram = parseFloat(e.target.value) || 0;
-                    setValue('gram', gram, { shouldValidate: true });
+                    const gram = parseFloat(e.target.value) || 0
+                    setValue('gram', gram, { shouldValidate: true })
                   }}
                 />
 
@@ -746,13 +767,13 @@ const ProductFormPage = ({ mode = 'add', productId, defaultValues, title }) => {
                   fullWidth
                   startAdornment="$"
                   onChange={(e) => {
-                    const userExtra = parseFloat(e.target.value) || 0;
-                    setValue('userExtra', userExtra, { shouldValidate: true });
+                    const userExtra = parseFloat(e.target.value) || 0
+                    setValue('userExtra', userExtra, { shouldValidate: true })
                     // Update total price (gold price + extra cost)
-                    const goldPrice = calculatedPrice?.totalPrice || 0;
+                    const goldPrice = calculatedPrice?.totalPrice || 0
                     setValue('price', goldPrice + userExtra, {
                       shouldValidate: true,
-                    });
+                    })
                   }}
                 />
               </>
@@ -817,7 +838,9 @@ const ProductFormPage = ({ mode = 'add', productId, defaultValues, title }) => {
               <div className="col-span-12 md:col-span-9">
                 {selectedSideImages?.length > 0 && (
                   <div className="mb-4">
-                    <p className="text-sm text-gray-500 mb-2">Current Side Images:</p>
+                    <p className="text-sm text-gray-500 mb-2">
+                      Current Side Images:
+                    </p>
                     <div className="flex flex-wrap gap-3">
                       {selectedSideImages.map((img, index) => (
                         <div key={index} className="relative group">
@@ -826,8 +849,9 @@ const ProductFormPage = ({ mode = 'add', productId, defaultValues, title }) => {
                             alt={`Side ${index + 1}`}
                             className="h-24 w-24 object-cover rounded border"
                             onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = img.mediumUrl || img.largeUrl || img;
+                              e.target.onerror = null
+                              e.target.src =
+                                img.mediumUrl || img.largeUrl || img
                             }}
                           />
                           <button
@@ -848,7 +872,11 @@ const ProductFormPage = ({ mode = 'add', productId, defaultValues, title }) => {
                 )}
                 <FileUploadButton
                   id="side-images-upload"
-                  label={selectedSideImages?.length > 0 ? 'Add More Images' : 'Add Side Images'}
+                  label={
+                    selectedSideImages?.length > 0
+                      ? 'Add More Images'
+                      : 'Add Side Images'
+                  }
                   onImageSelect={handleSideImagesSelect}
                   multiSelect={true}
                   selectedItems={selectedSideImages}
@@ -856,61 +884,24 @@ const ProductFormPage = ({ mode = 'add', productId, defaultValues, title }) => {
                   className="w-full"
                   accept="image/*"
                 />
+                {formMethods.formState.errors?.sideImages?.message && (
+                  <span className="mt-1 block text-[11px] text-red-600">
+                    {formMethods.formState.errors.sideImages.message}
+                  </span>
+                )}
               </div>
             </div>
 
-            {/* Video Embed Code */}
+            {/* Video Embed Link */}
             <div className="col-span-2">
               <FormAdminInputRow
-                name="videoEmbedCode"
-                label="Video Embed Code"
-                placeholder="Paste video embed code here"
+                name="videoEmbedLink"
+                label="Video Embed Link"
+                placeholder="Paste video link here"
                 multiline
-                rows={3}
+                rows={4}
                 fullWidth
               />
-            </div>
-
-            {/* Flash Sale */}
-            <div className="col-span-1 flex items-center ml-[185px]">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="isOnSale"
-                  checked={formMethods.watch('isOnSale')}
-                  onChange={(e) =>
-                    formMethods.setValue('isOnSale', e.target.checked)
-                  }
-                  className="h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-gray-300 rounded"
-                />
-                <label
-                  htmlFor="isOnSale"
-                  className="ml-2 block text-sm text-gray-700"
-                >
-                  Flash Sale
-                </label>
-              </div>
-            </div>
-
-            {/* Special */}
-            <div className="col-span-1 flex items-center ml-[185px]">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="isSpecial"
-                  checked={formMethods.watch('isSpecial')}
-                  onChange={(e) =>
-                    formMethods.setValue('isSpecial', e.target.checked)
-                  }
-                  className="h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-gray-300 rounded"
-                />
-                <label
-                  htmlFor="isSpecial"
-                  className="ml-2 block text-sm text-gray-700"
-                >
-                  Special
-                </label>
-              </div>
             </div>
           </div>
 
@@ -928,14 +919,23 @@ const ProductFormPage = ({ mode = 'add', productId, defaultValues, title }) => {
                 fullWidth
               />
 
-              <FormAdminInputRow
+              <Controller
                 name="description"
-                label="Description (English)"
-                placeholder="Enter product description"
-                multiline
-                rows={4}
-                required
-                fullWidth
+                control={formMethods.control}
+                render={({ field, fieldState }) => (
+                  <AdminTextAreaRow
+                    name={field.name}
+                    label="Description (English)"
+                    placeholder="Enter product description"
+                    rows={6}
+                    required
+                    fullWidth
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    error={fieldState.error?.message}
+                  />
+                )}
               />
             </div>
           </div>

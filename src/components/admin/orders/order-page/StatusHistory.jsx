@@ -60,7 +60,17 @@ const StatusHistory = ({ statusHistory }) => (
                     </div>
                     <div className="text-right text-sm whitespace-nowrap text-gray-500">
                       <time dateTime={history.date}>
-                        {new Date(history.date).toLocaleDateString()}
+                        {new Date(history.date)
+                          .toLocaleString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false,
+                            timeZone: 'Asia/Kolkata',
+                          })
+                          .replace(',', '')}
                       </time>
                     </div>
                   </div>

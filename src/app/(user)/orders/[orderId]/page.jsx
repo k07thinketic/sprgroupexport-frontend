@@ -245,7 +245,7 @@ export default function OrderDetailsPage() {
               Order Items ({order.products?.length || 0})
             </h1>
             <div className="flex flex-col items-end gap-2 text-right">
-              <h2 className='font-semibold'>
+              <h2 className="font-semibold">
                 Placed on {formatDate(order.createdAt)}
               </h2>
               <div className="flex items-center gap-1">
@@ -395,6 +395,17 @@ export default function OrderDetailsPage() {
                           {order.trackingNumber}
                         </p>
                       </div>
+                    )}
+                    <br />
+                    {order.shippingCourier && (
+                      <>
+                        <h3 className="text-sm font-medium text-gray-500">
+                          Shipping Courier
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {order.shippingCourier}
+                        </p>
+                      </>
                     )}
                   </div>
                 </div>

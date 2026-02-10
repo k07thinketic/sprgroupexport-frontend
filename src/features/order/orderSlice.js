@@ -6,6 +6,7 @@ import {
   updateOrderStatus as updateOrderStatusApi,
   deleteOrder as deleteOrderApi,
   customerReports,
+  getOrdersByUserId,
 } from '@/features/order/orderService'
 import { sortByCreatedAtDesc } from '@/utils/sortUtils'
 
@@ -41,9 +42,11 @@ export const createOrder = createAsyncThunk(
 // Async thunk for fetching user orders
 export const fetchUserOrders = createAsyncThunk(
   'order/fetchUserOrders',
-  async (_, { rejectWithValue }) => {
+  async (userId, { rejectWithValue }) => {
     try {
-      const response = await getUserOrders()
+      const response = userId
+        ? await getOrdersByUserId(userId)
+        : await getUserOrders()
       // Sort orders by creation date (newest first)
       return sortByCreatedAtDesc(response.data || [])
     } catch (error) {
@@ -169,7 +172,7 @@ const orderSlice = createSlice({
         search: '',
       },
     },
-    loading: false,
+    loading: true,
     error: null,
     success: false,
     customerReportsData: {

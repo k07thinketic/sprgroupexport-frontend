@@ -87,6 +87,15 @@ export const getUserOrders = async () => {
   }
 }
 
+export const getOrdersByUserId = async (userId) => {
+  try {
+    const response = await api.get(`/orders/admin/user/${userId}`)
+    return response.data
+  } catch (error) {
+    throw error.response?.data?.message || 'Failed to fetch user orders'
+  }
+}
+
 /**
  * Fetches a single order by ID
  * @param {string} orderId - The ID of the order to fetch

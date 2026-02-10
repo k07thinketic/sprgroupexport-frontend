@@ -281,6 +281,15 @@ export default function OrderDetail({
     )
   }
 
+  const selectedCity = shippingAddress?.city?.toLowerCase()
+
+  const filteredPaymentMethods = paymentMethods.filter((method) => {
+    if (method.type?.toLowerCase() === 'cod') {
+      return selectedCity === 'surat'
+    }
+    return true
+  })
+
   return (
     <form onSubmit={handleSubmit}>
       <div>
@@ -418,7 +427,7 @@ export default function OrderDetail({
             </div>
           ) : (
             <div className="space-y-3">
-              {paymentMethods.map((method) => (
+              {filteredPaymentMethods.map((method) => (
                 <div key={method._id} className="flex items-center">
                   <input
                     id={method.type?.toLowerCase()}

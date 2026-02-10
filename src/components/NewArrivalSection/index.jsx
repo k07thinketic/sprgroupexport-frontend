@@ -60,8 +60,6 @@ const NewArrivalSection = () => {
         price: product.price || 0,
         isNew: product.isNew || false,
         isVideo: product.isVideo || false,
-        flashSale: product.flashSale || false,
-        special: product.special || false,
         discount: product.discount || null,
         status: product.status || 'in-stock',
         minOrderLimit: product.minOrderLimit || 1,
@@ -125,8 +123,6 @@ const NewArrivalSection = () => {
                 price={product.price}
                 isNew={product.isNew}
                 isVideo={product.isVideo}
-                flashSale={product.flashSale}
-                special={product.special}
                 discount={product.discount}
                 status={product.status}
                 minOrderLimit={product.minOrderLimit}

@@ -119,7 +119,7 @@ export default function EditProductPage() {
     minOrderLimit: product.minOrderLimit || 1,
     maxOrderLimit: product.maxOrderLimit || 10,
     stock: product.stock || 0,
-    model: product.model || '',
+    productModel: product.productModel || '',
     carat: product.carat || '',
     gram: product.gram || 0,
     userExtra: product.userExtra || 0,
@@ -127,11 +127,9 @@ export default function EditProductPage() {
     size: product.size || '',
     image: product.image || '',
     videoEmbedLink: product.videoEmbedLink || '',
-    flashSale: product.flashSale || false,
-    special: product.special || false,
     productName: product.productName || product.name || '',
     description: product.description || '',
-    sideImages: product.sideImages || ''
+    sideImages: product.sideImages || '',
   }
 
   return (

@@ -68,6 +68,12 @@ const OrderInformation = ({
           </p>
         </div>
         <div>
+          <h3 className="font-medium text-gray-700">Shipping Courier</h3>
+          <p className="text-gray-600">
+            {order.originalData?.shippingCourier || 'Not set'}
+          </p>
+        </div>
+        <div>
           <h3 className="font-medium text-gray-700">Shipping Cost</h3>
           <p className="text-gray-600">₹{order.shipping.toFixed(2)}</p>
         </div>

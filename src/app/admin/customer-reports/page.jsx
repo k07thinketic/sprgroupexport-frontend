@@ -6,7 +6,10 @@ import {
 } from '@/components/admin/TanStackTable'
 import { customerReportsData } from '@/features/order/orderSlice'
 import { createColumnHelper } from '@tanstack/react-table'
-import { Suspense, useCallback, useEffect, useMemo } from 'react'
+import { Eye } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Suspense, use, useCallback, useEffect, useMemo } from 'react'
+import { FaEdit } from 'react-icons/fa'
 import { useDispatch, useSelector } from 'react-redux'
 
 const columnHelper = createColumnHelper()
@@ -14,6 +17,8 @@ const columnHelper = createColumnHelper()
 function CustomerReportsTableContent() {
   const dispatch = useDispatch()
   const { params } = useTableQueryParams()
+
+  const router = useRouter()
 
   const {
     data,
@@ -71,6 +76,25 @@ function CustomerReportsTableContent() {
         header: 'Total Spent',
         enableSorting: true,
         cell: ({ getValue }) => `₹${getValue().toLocaleString('en-IN')}`,
+      }),
+      columnHelper.display({
+        id: 'actions',
+        header: 'Actions',
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div className="flex items-center gap-2 justify-center">
+            <button
+              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-full hover:text-blue-700 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation()
+                router.push(`/admin/customer-reports/view/${row.original._id}`)
+              }}
+              title="View customer orders"
+            >
+              <Eye className="w-4 h-4" />
+            </button>
+          </div>
+        ),
       }),
     ],
     [],

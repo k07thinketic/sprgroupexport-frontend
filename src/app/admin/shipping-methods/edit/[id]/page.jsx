@@ -11,7 +11,7 @@ import {
   selectShippingError,
 } from '@/features/shipping-method/shippingMethodSlice'
 import { toast } from '@/utils/toastConfig'
-import { FormAdminInputRow } from '@/components/admin'
+import { FormAdminInputRow, FormAdminSelect } from '@/components/admin'
 
 export default function EditShippingMethodPage() {
   const { id } = useParams()
@@ -94,9 +94,7 @@ export default function EditShippingMethodPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded shadow">
-      <h1 className="text-2xl font-semibold mb-6">
-        Edit Shipping Method: {shippingMethod._id}
-      </h1>
+      <h1 className="text-2xl font-semibold mb-6">Edit Shipping Method</h1>
 
       <FormProvider {...methodsForm}>
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -107,6 +105,15 @@ export default function EditShippingMethodPage() {
             label="Price"
             type="number"
             required
+          />
+
+          <FormAdminSelect
+            name="status"
+            label="Status"
+            options={[
+              { label: 'Active', value: 'active' },
+              { label: 'Inactive', value: 'inactive' },
+            ]}
           />
 
           <hr className="my-6 border-gray-300" />

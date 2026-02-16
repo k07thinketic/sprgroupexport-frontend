@@ -383,7 +383,7 @@ export default function CartPage() {
                 <span>₹{total.toLocaleString()}</span>
               </div>
 
-              <div className="mt-6">
+              {/* <div className="mt-6">
                 <p className="text-sm text-gray-600 mb-2">Apply Coupon Code</p>
                 <div className="flex">
                   <input
@@ -400,7 +400,7 @@ export default function CartPage() {
                     APPLY
                   </button>
                 </div>
-              </div>
+              </div> */}
 
               <Link
                 href="/checkout"

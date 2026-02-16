@@ -29,11 +29,15 @@ export default function ShippingAddressPage() {
   const [formData, setFormData] = useState({
     name: '',
     mobile: '',
+    countryCode: '+91', // Default to India's country code
     address: '',
     city: '',
     state: '',
     zipCode: '',
     isDefault: false,
+    gst: '',
+    pancard: '',
+    country: 'India',
   })
 
   const hasAnyAddressWithGST = addresses.some((address) => address.gst)
@@ -48,9 +52,12 @@ export default function ShippingAddressPage() {
 
   // Handle both add and update
   const handleSubmit = async (formData) => {
+    const countryCode = formData.countryCode || '+91';
+    
     const addressData = {
       name: formData.name,
       mobile: formData.mobile,
+      countryCode: countryCode,
       address: formData.address,
       city: formData.city,
       state: formData.state,
@@ -59,6 +66,9 @@ export default function ShippingAddressPage() {
       gst: formData.gst || undefined,
       pancard: formData.pancard || undefined,
       country: formData.country || 'India',
+      // For backward compatibility
+      phone: `${countryCode}${formData.mobile}`,
+      mobileNo: formData.mobile
     }
 
     try {
@@ -91,11 +101,15 @@ export default function ShippingAddressPage() {
     setFormData({
       name: '',
       mobile: '',
+      countryCode: '+91',
       address: '',
       city: '',
       state: '',
       zipCode: '',
       isDefault: false,
+      gst: '',
+      pancard: '',
+      country: 'India',
     })
     setEditingId(null)
     setIsAddingNew(false)
@@ -103,16 +117,47 @@ export default function ShippingAddressPage() {
 
   // Handle edit button click
   const handleEdit = (address) => {
+    console.log('Editing address:', address); // Debug log
+    
+    // Extract country code from phone if available, otherwise use address.countryCode or default to +91
+    let countryCode = address.countryCode || '+91';
+    let mobile = address.mobileNo || address.mobile || '';
+    
+    // Ensure countryCode has + prefix
+    if (countryCode && !countryCode.startsWith('+')) {
+      countryCode = `+${countryCode}`;
+    }
+    
+    // If phone number includes country code, extract it
+    if (address.phone && typeof address.phone === 'string') {
+      // Find the first non-digit character in the phone number
+      const match = address.phone.match(/^\+?\d+/);
+      if (match) {
+        const matchedCode = `+${match[0].replace(/\D/g, '')}`;
+        // Only update countryCode if we found a valid one
+        if (matchedCode && matchedCode !== '+') {
+          countryCode = matchedCode;
+          // Remove country code from mobile number if present
+          mobile = mobile.replace(new RegExp(`^${countryCode.replace('+', '\\+')}`), '');
+        }
+      }
+    }
+    
+    // Log the values for debugging
+    console.log('Extracted values:', { countryCode, mobile });
+    
     setFormData({
       name: address.fullName || address.name || '',
-      mobile: address.mobileNo || address.mobile || '',
+      mobile: mobile,
+      countryCode: countryCode,
       address: address.address || '',
       city: address.city || '',
       state: address.state || '',
-      zipCode: address.zipCode || address.zipCode || '',
+      zipCode: address.pincode || address.zipCode || '',
       isDefault: address.isDefault || false,
       gst: address.gst || '',
       pancard: address.pancard || '',
+      country: address.country || 'India',
     })
     setEditingId(address._id)
     setIsAddingNew(true)
@@ -139,14 +184,12 @@ export default function ShippingAddressPage() {
   }, [dispatch])
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this address?')) {
-      try {
-        await dispatch(deleteAddress(id)).unwrap()
-        toast.success('Address deleted successfully')
-      } catch (error) {
-        console.error('Failed to delete address:', error)
-        toast.error(error.message || 'Failed to delete address')
-      }
+    try {
+      await dispatch(deleteAddress(id)).unwrap()
+      toast.success('Address deleted successfully')
+    } catch (error) {
+      console.error('Failed to delete address:', error)
+      toast.error(error.message || 'Failed to delete address')
     }
   }
 

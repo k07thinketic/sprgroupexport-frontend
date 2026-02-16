@@ -17,6 +17,7 @@ export const addShippingAddress = async (addressData) => {
       state: addressData.state,
       zipCode: addressData.zipCode,
       mobileNo: addressData.mobile,
+      countryCode: addressData.countryCode || '+91',
       gst: addressData.gst || '',
       pancard: addressData.pancard || '',
       isDefault: addressData.isDefault || false,
@@ -72,9 +73,12 @@ export const updateShippingAddress = async ({ id, ...addressData }) => {
       state: addressData.state,
       zipCode: addressData.zipCode,
       mobileNo: addressData.mobile,
+      countryCode: addressData.countryCode || '+91',
       gst: addressData.gst || '',
       pancard: addressData.pancard || '',
       isDefault: addressData.isDefault || false,
+      // For backward compatibility
+      phone: addressData.phone || `${addressData.countryCode || '+91'}${addressData.mobile}`
     })
     return response
   } catch (error) {

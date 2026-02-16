@@ -6,7 +6,7 @@ import { RowActionsMenu } from '@/components/admin/RowActionMenu'
 import { getAddressString } from '@/utils/stringUtils'
 import { useRouter } from 'next/navigation'
 import { useDispatch, useSelector } from 'react-redux'
-import { getAllCustomers } from '@/features/customers/customersSlice'
+import { getAllCustomers, deleteCustomer } from '@/features/customers/customersSlice'
 import ConfirmationModal from '@/components/admin/ConfirmationModal'
 import toast from 'react-hot-toast'
 import {

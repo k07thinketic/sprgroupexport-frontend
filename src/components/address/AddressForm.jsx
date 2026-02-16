@@ -31,10 +31,11 @@ export default function AddressForm({
   const [states, setStates] = useState([])
   const [cities, setCities] = useState([])
 
-  // Initialize form data with initialFormData
+  // Initialize form data with default values
   const [formData, setFormData] = useState({
     name: '',
     mobile: '',
+    countryCode: '+91', // Default to India's country code
     address: '',
     city: '',
     state: '',
@@ -43,8 +44,26 @@ export default function AddressForm({
     gst: '',
     pancard: '',
     country: 'India',
-    ...initialFormData,
   })
+
+  // Update form data when initialFormData changes (for edit mode)
+  useEffect(() => {
+    if (initialFormData) {
+      // Ensure country code has + prefix if it's missing
+      const countryCode = initialFormData.countryCode 
+        ? initialFormData.countryCode.startsWith('+') 
+          ? initialFormData.countryCode 
+          : `+${initialFormData.countryCode}`
+        : '+91';
+
+      setFormData(prev => ({
+        ...prev,
+        ...initialFormData,
+        countryCode,
+        country: initialFormData.country || 'India'
+      }));
+    }
+  }, [initialFormData])
   const dispatch = useDispatch()
   const {
     loading: gstLoading,
@@ -52,10 +71,44 @@ export default function AddressForm({
     error: gstError,
   } = useSelector((state) => state.gst)
 
-  // Load countries on component mount
+  // Load countries on component mount and set initial form data
   useEffect(() => {
-    const allCountries = Country.getAllCountries()
-    setCountries(allCountries)
+    const allCountries = Country.getAllCountries().map(country => {
+      // Ensure phonecode is a string and has + prefix
+      let phonecode = String(country.phonecode);
+      if (!phonecode.startsWith('+')) {
+        phonecode = `+${phonecode}`;
+      }
+      
+      return {
+        ...country,
+        phonecode,
+        // Add a displayPhoneCode that's guaranteed to have + prefix
+        displayPhoneCode: phonecode.startsWith('+') ? phonecode : `+${phonecode}`
+      };
+    });
+    
+    setCountries(allCountries);
+    
+    // Set initial form data after countries are loaded
+    if (initialFormData) {
+      // Ensure country code has + prefix if it's missing
+      let countryCode = initialFormData.countryCode || '';
+      if (countryCode && !countryCode.startsWith('+')) {
+        countryCode = `+${countryCode}`;
+      } else if (!countryCode) {
+        // Default to India's country code if none provided
+        const india = allCountries.find(c => c.name === 'India');
+        countryCode = india ? india.phonecode : '+91';
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        ...initialFormData,
+        countryCode,
+        country: initialFormData.country || 'India'
+      }));
+    }
   }, [])
 
   // Load states when country changes
@@ -65,12 +118,25 @@ export default function AddressForm({
       if (countryData) {
         const countryStates = State.getStatesOfCountry(countryData.isoCode)
         setStates(countryStates)
-        // Reset cities when country changes
-        setCities([])
-        setFormData((prev) => ({ ...prev, state: '', city: '' }))
+        
+        // Only reset state and city if we're not in edit mode
+        if (!initialFormData?.state) {
+          setCities([])
+          setFormData(prev => ({ ...prev, state: '', city: '' }))
+        } else if (initialFormData?.state) {
+          // If we have a state in initial data, load its cities
+          const stateData = countryStates.find(s => s.name === initialFormData.state);
+          if (stateData) {
+            const stateCities = City.getCitiesOfState(
+              countryData.isoCode,
+              stateData.isoCode
+            )
+            setCities(stateCities);
+          }
+        }
       }
     }
-  }, [formData.country, countries])
+  }, [formData.country, countries, initialFormData])
 
   // Load cities when state changes
   useEffect(() => {
@@ -83,17 +149,38 @@ export default function AddressForm({
           stateData.isoCode,
         )
         setCities(stateCities)
-        setFormData((prev) => ({ ...prev, city: '' }))
+        
+        // Only reset city if it's not in the new list of cities or not in initial data
+        const currentCity = formData.city;
+        const cityExists = stateCities.some(city => city.name === currentCity);
+        if (!cityExists && !initialFormData?.city) {
+          setFormData(prev => ({ ...prev, city: '' }));
+        }
       }
     }
   }, [formData.state, formData.country, countries, states])
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target
+    const { name, value, type, checked } = e.target;
+    
+    // Special handling for country code to ensure it has + prefix
+    if (name === 'countryCode') {
+      let newValue = value;
+      // Ensure the country code has a + prefix
+      if (newValue && !newValue.startsWith('+')) {
+        newValue = `+${newValue}`;
+      }
+      setFormData((prev) => ({
+        ...prev,
+        [name]: newValue,
+      }));
+      return;
+    }
+    
     setFormData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
-    }))
+    }));
   }
 
   const handleSubmitForm = (e) => {
@@ -103,7 +190,14 @@ export default function AddressForm({
     // Support both onSubmit and handleSubmit props for backward compatibility
     const submitHandler = onSubmit || handleSubmit
     if (typeof submitHandler === 'function') {
-      submitHandler(formData)
+      // Include both countryCode and mobile in the submitted data
+      const submissionData = {
+        ...formData,
+        countryCode: formData.countryCode, // Include country code
+        mobileNo: formData.mobile,         // Keep mobile number as is
+        phone: `${formData.countryCode}${formData.mobile}` // Also include combined phone for backward compatibility
+      }
+      submitHandler(submissionData)
     } else {
       console.error('No submit handler provided to AddressForm')
     }
@@ -139,6 +233,10 @@ export default function AddressForm({
       let cityName = addressParts.dst || ''
       const address = pradr?.adr || ''
       const zipCode = addressParts.pncd || ''
+      
+      // Set country code to India for Indian GST numbers
+      const indiaCountry = countries.find(c => c.name === 'India')
+      const countryCode = indiaCountry ? indiaCountry.phonecode : '+91'
 
       // Find state by code if available
       if (stateCode) {
@@ -178,6 +276,7 @@ export default function AddressForm({
           country: 'India', // Default to India for GST
           // Additional fields from GST data if needed
           ...(stj && { additionalInfo: stj }),
+          countryCode,
         }
 
         return updatedData
@@ -258,17 +357,41 @@ export default function AddressForm({
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Mobile Number
           </label>
-          <input
-            type="tel"
-            name="mobile"
-            value={formData.mobile}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#BA8B4E] focus:border-[#BA8B4E] outline-none"
-            placeholder="Mobile Number"
-            required
-            pattern="[0-9]{10}"
-            title="Please enter a valid 10-digit mobile number"
-          />
+          <div className="flex">
+            <select
+              name="countryCode"
+              value={formData.countryCode || '+91'}
+              onChange={handleChange}
+              className="w-1/3 px-2 py-2 border border-r-0 border-gray-300 rounded-l-md focus:ring-1 focus:ring-[#BA8B4E] focus:border-[#BA8B4E] outline-none bg-white"
+            >
+              {countries.map((country) => {
+                // Ensure phonecode has + prefix for consistent comparison
+                const phonecode = country.phonecode.startsWith('+') ? country.phonecode : `+${country.phonecode}`;
+                return (
+                  <option 
+                    key={country.isoCode} 
+                    value={phonecode}
+                  >
+                    {country.isoCode} {phonecode}
+                  </option>
+                );
+              })}
+            </select>
+            <input
+              type="tel"
+              name="mobile"
+              value={formData.mobile}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-l-0 border-gray-300 rounded-r-md focus:ring-1 focus:ring-[#BA8B4E] focus:border-[#BA8B4E] outline-none"
+              placeholder="Mobile Number"
+              required
+              pattern="[0-9]{6,15}"
+              title="Please enter a valid mobile number (6-15 digits)"
+            />
+          </div>
+          <p className="mt-1 text-xs text-gray-500">
+            Full number: {formData.countryCode} {formData.mobile}
+          </p>
         </div>
 
         <div className="col-span-2">
@@ -318,7 +441,7 @@ export default function AddressForm({
           </label>
           <select
             name="city"
-            value={formData.city}
+            value={formData.city || ''}
             onChange={handleChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#BA8B4E] focus:border-[#BA8B4E] outline-none"
             required
@@ -330,6 +453,12 @@ export default function AddressForm({
                 {city.name}
               </option>
             ))}
+            {/* Add current city as an option if it's not in the list but exists in formData */}
+            {formData.city && !cities.some(c => c.name === formData.city) && (
+              <option key="current-city" value={formData.city}>
+                {formData.city}
+              </option>
+            )}
           </select>
         </div>
 

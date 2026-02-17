@@ -37,7 +37,7 @@ export default function AddressCard({
               )}
             </div>
             <p className="text-sm text-gray-500">
-              {address.mobileNo || address.mobile}
+              {address.countryCode ? `${address.countryCode} ` : ''}{address.mobileNo || address.mobile}
             </p>
             <p className="text-sm text-gray-700 mt-1">{address.address}</p>
             <p className="text-sm text-gray-700">
@@ -52,11 +52,10 @@ export default function AddressCard({
             <button
               onClick={() => onSetDefault(address._id)}
               disabled={address.isDefault || isDefaultLoading}
-              className={`p-2 rounded-md ${
-                address.isDefault
+              className={`p-2 rounded-md ${address.isDefault
                   ? 'text-gray-300 cursor-not-allowed'
                   : 'text-gray-500 hover:bg-gray-100'
-              }`}
+                }`}
             >
               <FaHome className="h-4 w-4" />
             </button>

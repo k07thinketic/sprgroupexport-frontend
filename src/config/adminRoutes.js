@@ -109,7 +109,7 @@ export const routeMeta = [
       '/admin/attributes',
       '/admin/products',
       '/admin/inventory',
-      '/admin/bulk-upload',
+      // '/admin/bulk-upload',
       '/admin/reviews',
       '/admin/gold',
     ],
@@ -182,14 +182,14 @@ export const routeMeta = [
     sidebar: true,
     icon: AiOutlineInbox,
   },
-  {
-    key: 'bulk-upload',
-    path: '/admin/bulk-upload',
-    label: 'Bulk Upload',
-    parent: '/admin',
-    sidebar: true,
-    icon: FaUpload,
-  },
+  // {
+  //   key: 'bulk-upload',
+  //   path: '/admin/bulk-upload',
+  //   label: 'Bulk Upload',
+  //   parent: '/admin',
+  //   sidebar: true,
+  //   icon: FaUpload,
+  // },
   {
     key: 'reviews',
     path: '/admin/reviews',
@@ -290,7 +290,6 @@ export const routeMeta = [
   // ===== Reports =====
   {
     key: 'reports',
-    path: '/admin/reports',
     label: 'Reports',
     parent: '/admin',
     sidebar: true,
@@ -350,14 +349,14 @@ export const routeMeta = [
   },
 
   // ===== Coupons =====
-  {
-    key: 'coupons',
-    path: '/admin/coupons',
-    label: 'Coupons',
-    parent: '/admin',
-    sidebar: true,
-    icon: FaTicket,
-  },
+  // {
+  //   key: 'coupons',
+  //   path: '/admin/coupons',
+  //   label: 'Coupons',
+  //   parent: '/admin',
+  //   sidebar: true,
+  //   icon: FaTicket,
+  // },
 
   // ===== Shipping =====
   {
@@ -423,22 +422,22 @@ export const routeMeta = [
     parent: '/admin',
     icon: FaLaptopCode,
     sidebarChildrens: [
-      '/admin/settings/website/slider-images',
+      // '/admin/settings/website/slider-images',
       '/admin/settings/website/parallax-banners',
-      '/admin/settings/website/banners',
+      // '/admin/settings/website/banners',
       '/admin/settings/website/content-page',
       '/admin/settings/website/seo-content',
       '/admin/settings/website/settings',
     ],
   },
-  {
-    key: 'slider-images',
-    path: '/admin/settings/website/slider-images',
-    label: 'Slider Images',
-    parent: '/admin/settings/website',
-    sidebar: true,
-    icon: FaRegImages,
-  },
+  // {
+  //   key: 'slider-images',
+  //   path: '/admin/settings/website/slider-images',
+  //   label: 'Slider Images',
+  //   parent: '/admin/settings/website',
+  //   sidebar: true,
+  //   icon: FaRegImages,
+  // },
 
   {
     key: 'parallax-banners',
@@ -450,14 +449,14 @@ export const routeMeta = [
     icon: FaImages,
   },
 
-  {
-    key: 'banners',
-    path: '/admin/settings/website/banners',
-    label: 'Banners',
-    parent: '/admin/settings/website',
-    sidebar: true,
-    icon: FaImages,
-  },
+  // {
+  //   key: 'banners',
+  //   path: '/admin/settings/website/banners',
+  //   label: 'Banners',
+  //   parent: '/admin/settings/website',
+  //   sidebar: true,
+  //   icon: FaImages,
+  // },
 
   {
     key: 'content-page',

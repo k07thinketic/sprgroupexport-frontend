@@ -57,7 +57,7 @@ const Hero = () => {
 
   return (
     <section
-      className="relative w-full h-screen group z-1"
+      className="relative w-full h-screen group"
       onMouseEnter={() => {
         setIsAutoPlaying(false)
         setIsHovered(true)

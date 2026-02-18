@@ -32,7 +32,7 @@ export async function generateMetadata() {
       title: 'SPR GROUP EXPORT',
       description: 'spr group export ecommerce platform',
       icons: {
-        icon: settingsData.favicon,
+        icon: '/spr_logo.png',
       },
     }
   }

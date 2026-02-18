@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import Image from 'next/image'
 import Link from 'next/link'
 import { fetchUserOrders } from '@/features/order/orderSlice'
 
@@ -14,6 +13,7 @@ import HeaderIcons from './components/HeaderIcons'
 import Navigation from './components/Navigation'
 import BreadcrumbsWrapper from './components/BreadcrumbsWrapper'
 import StickyHeader from './components/StickyHeader'
+import SafeImage from '../SafeImage'
 
 const Header = ({ settings = {} }) => {
   const dispatch = useDispatch()
@@ -99,15 +99,13 @@ const Header = ({ settings = {} }) => {
               <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                 {/* Logo */}
                 <Link href="/" className="flex items-center">
-                  <Image
-                    src={settings?.logo || '/spr_logo.png'}
+                  <SafeImage
+                    src={settings?.logo}
+                    fallback="/spr_logo.png"
                     alt="SPR Group of Export"
                     width={270}
                     height={175}
                     priority
-                    onError={(e) => {
-                      e.target.src = '/spr_logo.png'
-                    }}
                   />
                 </Link>
 

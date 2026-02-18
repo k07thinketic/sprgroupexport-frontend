@@ -6,10 +6,10 @@ import { GrInstagram } from 'react-icons/gr'
 import { BsGoogle } from 'react-icons/bs'
 import { ImFacebook2 } from 'react-icons/im'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useDispatch, useSelector } from 'react-redux'
 import { getGeneralSetting } from '@/features/general-setting/generatSettingSlice'
 import { fetchContentPages } from '@/features/content-page/contentPageSlice'
+import SafeImage from '../SafeImage'
 
 const Footer = ({ settings = {} }) => {
   const dispatch = useDispatch()
@@ -50,16 +50,16 @@ const Footer = ({ settings = {} }) => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
             <div className="w-64 h-40 relative">
-              <Image
-                src={safeSettings.logo || '/spr_logo.png'}
+              <SafeImage
+                src={safeSettings.logo}
+                fallback="/spr_logo.png"
                 alt="SPR Logo"
                 fill
                 className="object-contain object-left"
                 sizes="(max-width: 768px) 100vw, 256px"
                 priority
-                onError={(e) => {
-                  e.target.src = '/spr_logo.png'
-                }}
+              />
+              <Image
               />
             </div>
 

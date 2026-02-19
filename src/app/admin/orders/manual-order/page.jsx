@@ -45,6 +45,8 @@ export default function ManualOrderPage() {
       email: String(email),
     })
     setUserData(user)
+
+    setActiveTab('order')
   }
 
   const handleClearForm = () => {
@@ -248,8 +250,6 @@ export default function ManualOrderPage() {
       toast.success('Order created')
       if (createdOrderId) {
         router.push(`/admin/orders/${createdOrderId}`)
-      } else {
-        router.push('/admin/orders')
       }
     } catch (e) {
       console.error('Error creating order:', e)
@@ -262,16 +262,9 @@ export default function ManualOrderPage() {
   }
 
   return (
-    <div className="w-full p-6 bg-white rounded shadow">
+    <>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold">Manual Create User and Order</h1>
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="px-4 py-2 rounded border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-colors"
-        >
-          Back
-        </button>
       </div>
 
       <div className="border-b-2 pb-3 border-cyan-400 mb-6">
@@ -281,11 +274,11 @@ export default function ManualOrderPage() {
             onClick={() => setActiveTab('user')}
             className={`px-4 py-2 rounded-md text-sm font-semibold border transition-colors ${
               activeTab === 'user'
-                ? 'bg-cyan-600 text-white border-cyan-600'
+                ? 'bg-cyan-800 text-white border-cyan-800'
                 : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
             }`}
           >
-            Manual User
+            Create Manual User
           </button>
 
           <button
@@ -293,11 +286,11 @@ export default function ManualOrderPage() {
             onClick={() => setActiveTab('order')}
             className={`px-4 py-2 rounded-md text-sm font-semibold border transition-colors ${
               activeTab === 'order'
-                ? 'bg-cyan-600 text-white border-cyan-600'
+                ? 'bg-cyan-800 text-white border-cyan-800'
                 : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
             }`}
           >
-            Manual User Order
+            Create Manual Order
           </button>
         </div>
       </div>
@@ -334,6 +327,6 @@ export default function ManualOrderPage() {
           />
         </div>
       </div>
-    </div>
+    </>
   )
 }

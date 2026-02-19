@@ -18,7 +18,7 @@ import { toast } from '@/utils/toastConfig'
 export default function OrderFormPage({
   mode = 'add',
   defaultValues,
-  title = 'Manual User Order',
+  title = 'Manually Add Order',
   onSubmit,
   submitting = false,
   productOptions = [],
@@ -49,6 +49,60 @@ export default function OrderFormPage({
         defaultValues?.onlyAdminComment?.[0]?.message ?? '',
       paidAmount: defaultValues?.paidAmount ?? 0,
       remainingAmount: defaultValues?.remainingAmount ?? 0,
+    },
+    mode: 'onChange',
+    resolver: (data) => {
+      const errors = {}
+
+      if (!data.shippingMethod) {
+        errors.shippingMethod = {
+          type: 'required',
+          message: 'Shipping Method is required',
+        }
+      }
+
+      data.products?.forEach((product, index) => {
+        if (!product.productId) {
+          errors[`products.${index}.productId`] = {
+            type: 'required',
+            message: 'Product is required',
+          }
+        }
+      })
+
+      if (!data.email || !data.email.trim()) {
+        errors.email = {
+          type: 'required',
+          message:
+            'User email is required. Please create or select a user first.',
+        }
+      }
+
+      if (!data.paymentMethod) {
+        errors.paymentMethod = {
+          type: 'required',
+          message: 'Payment Method is required',
+        }
+      }
+
+      if (!data.paymentStatus) {
+        errors.paymentStatus = {
+          type: 'required',
+          message: 'Payment Status is required',
+        }
+      }
+
+      if (!data.orderStatus) {
+        errors.orderStatus = {
+          type: 'required',
+          message: 'Order Status is required',
+        }
+      }
+
+      return {
+        values: Object.keys(errors).length === 0 ? data : {},
+        errors,
+      }
     },
   })
 
@@ -92,6 +146,8 @@ export default function OrderFormPage({
   const shippingMethodValue = methods.watch('shippingMethod')
   const shippingCostValue = methods.watch('shippingCost')
   const paidAmountValue = methods.watch('paidAmount')
+  const emailValue = methods.watch('email')
+  const showAddressSection = !!emailValue?.trim()
 
   // Watch all product fields to ensure subtotal updates
   const productValues = fields.map((_, index) => ({
@@ -431,45 +487,28 @@ export default function OrderFormPage({
               fullWidth
               readOnly
             />
-            <h2 className="text-lg font-bold uppercase mb-6">
-              SELECT EXISTING ADDRESS
-            </h2>
+            {showAddressSection && (
+              <>
+                <h2 className="text-lg font-bold uppercase mb-6">
+                  SELECT EXISTING ADDRESS
+                </h2>
 
-            {isLoading ? (
-              <div className="text-center py-4">Loading addresses...</div>
-            ) : (
-              <div className="space-y-4 mb-6">
-                {addresses.length > 0 || showNewAddressForm ? (
-                  <div className="space-y-4">
-                    {addresses.map((address) => (
-                      <div
-                        key={address._id}
-                        className={`border rounded-md p-4 cursor-pointer transition-colors ${
-                          selectedAddressId === address._id &&
-                          !showNewAddressForm
-                            ? 'border-[#c89b5a] bg-amber-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                        onClick={() => {
-                          const selectedAddress = addresses.find(
-                            (addr) => addr._id === address._id,
-                          )
-                          setSelectedAddressId(address._id)
-                          setShowNewAddressForm(false)
-                          methods.setValue('shippingAddressId', address._id)
-                        }}
-                      >
-                        <div className="flex items-start">
-                          <input
-                            type="radio"
-                            id={`address-${address._id}`}
-                            name="address"
-                            className="h-4 w-4 text-[#c89b5a] focus:ring-[#c89b5a] mt-1"
-                            checked={
+                {isLoading ? (
+                  <div className="text-center py-4">Loading addresses...</div>
+                ) : (
+                  <div className="space-y-4 mb-6">
+                    {addresses.length > 0 || showNewAddressForm ? (
+                      <div className="space-y-4">
+                        {addresses.map((address) => (
+                          <div
+                            key={address._id}
+                            className={`border rounded-md p-4 cursor-pointer transition-colors ${
                               selectedAddressId === address._id &&
                               !showNewAddressForm
-                            }
-                            onChange={() => {
+                                ? 'border-[#c89b5a] bg-amber-50'
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                            onClick={() => {
                               const selectedAddress = addresses.find(
                                 (addr) => addr._id === address._id,
                               )
@@ -477,96 +516,125 @@ export default function OrderFormPage({
                               setShowNewAddressForm(false)
                               methods.setValue('shippingAddressId', address._id)
                             }}
-                          />
-                          <div className="ml-3 flex-1">
-                            <div className="flex justify-between">
-                              <label
-                                htmlFor={`address-${address._id}`}
-                                className="block text-sm font-medium text-gray-700 cursor-pointer"
-                              >
-                                {address.fullName}
-                              </label>
-                              <div className="flex gap-2">
-                                {address.isDefault && (
-                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    Default
-                                  </span>
+                          >
+                            <div className="flex items-start">
+                              <input
+                                type="radio"
+                                id={`address-${address._id}`}
+                                name="address"
+                                className="h-4 w-4 text-[#c89b5a] focus:ring-[#c89b5a] mt-1"
+                                checked={
+                                  selectedAddressId === address._id &&
+                                  !showNewAddressForm
+                                }
+                                onChange={() => {
+                                  const selectedAddress = addresses.find(
+                                    (addr) => addr._id === address._id,
+                                  )
+                                  setSelectedAddressId(address._id)
+                                  setShowNewAddressForm(false)
+                                  methods.setValue(
+                                    'shippingAddressId',
+                                    address._id,
+                                  )
+                                }}
+                              />
+                              <div className="ml-3 flex-1">
+                                <div className="flex justify-between">
+                                  <label
+                                    htmlFor={`address-${address._id}`}
+                                    className="block text-sm font-medium text-gray-700 cursor-pointer"
+                                  >
+                                    {address.fullName}
+                                  </label>
+                                  <div className="flex gap-2">
+                                    {address.isDefault && (
+                                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Default
+                                      </span>
+                                    )}
+                                    {address.gst && (
+                                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        WITH GST
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  {address.address}, {address.city},{' '}
+                                  {address.state}, {address.country},{' '}
+                                  {address.zipCode}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  Phone: {address.mobileNo}
+                                </p>
+                                {!address.isDefault && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) =>
+                                      handleSetDefault(address._id, e)
+                                    }
+                                    className="mt-2 text-xs text-amber-700 hover:text-amber-800 mr-3"
+                                  >
+                                    Set as default
+                                  </button>
                                 )}
-                                {address.gst && (
-                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    WITH GST
-                                  </span>
-                                )}
+                                <button
+                                  type="button"
+                                  onClick={(e) =>
+                                    handleEditAddress(address._id, e)
+                                  }
+                                  className="mt-2 text-xs text-blue-600 hover:text-blue-800"
+                                >
+                                  Edit
+                                </button>
                               </div>
                             </div>
-                            <p className="text-sm text-gray-600 mt-1">
-                              {address.address}, {address.city}, {address.state}
-                              , {address.country}, {address.zipCode}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              Phone: {address.mobileNo}
-                            </p>
-                            {!address.isDefault && (
-                              <button
-                                type="button"
-                                onClick={(e) =>
-                                  handleSetDefault(address._id, e)
-                                }
-                                className="mt-2 text-xs text-amber-700 hover:text-amber-800 mr-3"
-                              >
-                                Set as default
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={(e) => handleEditAddress(address._id, e)}
-                              className="mt-2 text-xs text-blue-600 hover:text-blue-800"
-                            >
-                              Edit
-                            </button>
                           </div>
-                        </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-4 text-gray-500">
-                    No saved addresses found
+                    ) : (
+                      <div className="text-center py-4 text-gray-500">
+                        No saved addresses found
+                      </div>
+                    )}
+
+                    {!showNewAddressForm && (
+                      <div className="flex items-center">
+                        <input
+                          type="radio"
+                          id="new-address"
+                          name="address-type"
+                          className="h-4 w-4 text-[#c89b5a] focus:ring-[#c89b5a]"
+                          checked={showNewAddressForm}
+                          onChange={() => setShowNewAddressForm(true)}
+                        />
+                        <label
+                          htmlFor="new-address"
+                          className="ml-2 text-sm text-gray-700"
+                        >
+                          {editingAddressId
+                            ? 'Edit Address'
+                            : 'Add New Address'}
+                        </label>
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {!showNewAddressForm && (
-                  <div className="flex items-center">
-                    <input
-                      type="radio"
-                      id="new-address"
-                      name="address-type"
-                      className="h-4 w-4 text-[#c89b5a] focus:ring-[#c89b5a]"
-                      checked={showNewAddressForm}
-                      onChange={() => setShowNewAddressForm(true)}
+                {showNewAddressForm && (
+                  <div className="mb-6">
+                    <AddressForm
+                      initialFormData={formData}
+                      onSubmit={handleFormSubmit}
+                      handleCancel={handleCancelNewAddress}
+                      isLoading={isLoading}
+                      isEditing={!!editingAddressId}
+                      hasGst={!!formData.gst || hasAnyAddressWithGST}
                     />
-                    <label
-                      htmlFor="new-address"
-                      className="ml-2 text-sm text-gray-700"
-                    >
-                      {editingAddressId ? 'Edit Address' : 'Add New Address'}
-                    </label>
                   </div>
                 )}
-              </div>
-            )}
-
-            {showNewAddressForm && (
-              <div className="mb-6">
-                <AddressForm
-                  initialFormData={formData}
-                  onSubmit={handleFormSubmit}
-                  handleCancel={handleCancelNewAddress}
-                  isLoading={isLoading}
-                  isEditing={!!editingAddressId}
-                  hasGst={!!formData.gst || hasAnyAddressWithGST}
-                />
-              </div>
+              </>
             )}
 
             <FormAdminSelect
@@ -577,6 +645,7 @@ export default function OrderFormPage({
                 ...shippingMethodOptions,
               ]}
               fullWidth
+              required
             />
             <FormAdminInputRow
               name="shippingCost"
@@ -588,7 +657,7 @@ export default function OrderFormPage({
             <div className="mb-4">
               <div className="flex items-center justify-center gap-6">
                 <h3 className="text-sm font-semibold text-gray-800 pl-8">
-                  Products
+                  Products <span className="text-red-600">*</span>
                 </h3>
                 <button
                   type="button"
@@ -624,6 +693,7 @@ export default function OrderFormPage({
                             ...productOptions,
                           ]}
                           fullWidth
+                          required
                         />
                       </div>
 
@@ -702,6 +772,7 @@ export default function OrderFormPage({
                 label="Paid Amount"
                 type="number"
                 fullWidth
+                required
               />
 
               <FormAdminInputRow
@@ -720,6 +791,7 @@ export default function OrderFormPage({
                 ...paymentMethodOptions,
               ]}
               fullWidth
+              required
             />
             <FormAdminSelect
               name="paymentStatus"
@@ -729,6 +801,7 @@ export default function OrderFormPage({
                 ...paymentStatusOptions,
               ]}
               fullWidth
+              required
             />
             <FormAdminSelect
               name="orderStatus"
@@ -738,6 +811,7 @@ export default function OrderFormPage({
                 ...orderStatusOptions,
               ]}
               fullWidth
+              required
             />
             <Controller
               name="onlyAdminCommentMessage"

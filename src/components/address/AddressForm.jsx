@@ -64,12 +64,6 @@ export default function AddressForm({
       }))
     }
   }, [initialFormData])
-  useEffect(() => {
-    setFormData((prev) => ({
-      ...prev,
-      ...initialFormData,
-    }))
-  }, [initialFormData])
 
   useEffect(() => {
     if (formData.country && countries.length > 0) {

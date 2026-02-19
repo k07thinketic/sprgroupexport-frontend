@@ -29,46 +29,29 @@ export default function PayPalSuccess() {
       try {
         console.log('Processing PayPal success:', { token, payerId })
 
-        // Get stored order data from localStorage (set during checkout)
         const storedOrderData = localStorage.getItem('pendingPayPalOrder')
         if (!storedOrderData) {
           throw new Error('Order data not found')
         }
 
-        // Get PayPal order ID from URL token (this is the PayPal order ID)
         const paypalOrderId = token
-        console.log('PayPal order ID from token:', paypalOrderId)
 
         const orderData = JSON.parse(storedOrderData)
-        console.log('Creating order with data:', orderData)
 
-        // Add PayPal order ID to order data
         orderData.paymentProviderOrderId = paypalOrderId
         console.log(
           'Order data with PayPal ID:',
           JSON.stringify(orderData, null, 2),
         )
 
-        // Create the actual order in database
         const orderResponse = await api.post('/orders/create', orderData)
         console.log('Order created successfully:', orderResponse.data)
         const createdOrder = orderResponse.data
-
-        // Check if paymentProviderOrderId was saved
-        console.log(
-          'Created order paymentProviderOrderId:',
-          createdOrder.paymentProviderOrderId,
-        )
 
         toast.success(
           `Order #${createdOrder._id.slice(-6)} created successfully! Payment received.`,
         )
 
-        // Now capture the PayPal payment using the PayPal order ID (not our order ID)
-        console.log(
-          'Capturing PayPal payment with PayPal order ID:',
-          paypalOrderId,
-        )
         try {
           const captureResponse = await api.post(
             `/payments/capture/paypal/${paypalOrderId}`,
@@ -77,21 +60,10 @@ export default function PayPalSuccess() {
               payerId,
             },
           )
-          console.log(
-            'PayPal payment captured successfully:',
-            captureResponse.data,
-          )
-          console.log('Capture response status:', captureResponse.data?.success)
         } catch (captureError) {
           console.error('PayPal capture failed:', captureError)
-          console.error('Capture error details:', captureError.response?.data)
-          // Don't fail the whole process if capture fails - order is already created
-          console.log(
-            'Order created but PayPal capture failed - user paid but system error',
-          )
         }
 
-        // Clear stored order data
         localStorage.removeItem('pendingPayPalOrder')
 
         setStatus('success')
@@ -99,20 +71,10 @@ export default function PayPalSuccess() {
           'Payment successful! Order created. Redirecting to your orders...',
         )
 
-        // Redirect to orders page after 2 seconds
         setTimeout(() => {
           router.push('/orders')
         }, 2000)
       } catch (error) {
-        console.error('PayPal order creation failed:', error)
-        console.error('Error response:', error.response?.data)
-        console.error('Error status:', error.response?.status)
-        console.error(
-          'Error details:',
-          error.response?.data?.message || error.message,
-        )
-
-        // Show error notification
         toast.error('Order creation failed. Please contact support.')
 
         setStatus('error')
@@ -120,7 +82,6 @@ export default function PayPalSuccess() {
           'Order creation failed. Please contact support with your PayPal transaction ID.',
         )
 
-        // Redirect to orders page after 5 seconds even on error
         setTimeout(() => {
           router.push('/orders')
         }, 5000)
@@ -128,7 +89,7 @@ export default function PayPalSuccess() {
     }
 
     processPayPalPayment()
-  }, [searchParams, router]) // Only depend on searchParams and router
+  }, [searchParams, router])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

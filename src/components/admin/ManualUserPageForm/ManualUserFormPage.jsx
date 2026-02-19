@@ -7,12 +7,13 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDispatch, useSelector } from 'react-redux'
 import { verifyGST, clearGSTData } from '@/features/gst/gstSlice'
+import { getGeneralSetting } from '@/features/general-setting/generatSettingSlice'
 import api from '@/lib/axios'
 
 export default function ManualUserFormPage({
   mode = 'add',
   defaultValues,
-  title = 'Manual User Create',
+  title = "If user doesn't exist, it will be created as Manual User",
   onSubmit,
   submitting = false,
   onExistingUserDetected,
@@ -27,6 +28,8 @@ export default function ManualUserFormPage({
     verifiedData,
     error: gstError,
   } = useSelector((state) => state.gst)
+
+  const { data: generalSetting } = useSelector((state) => state.generalSetting)
 
   const [lookingUpByEmail, setLookingUpByEmail] = useState(false)
   const [isAutoFilled, setIsAutoFilled] = useState(false)
@@ -54,6 +57,87 @@ export default function ManualUserFormPage({
         isDefault: defaultValues?.address?.isDefault ?? false,
       },
     },
+    mode: 'onChange',
+    resolver: async (data) => {
+      const errors = {}
+
+      if (!isAutoFilled) {
+        if (!data.firstName?.trim()) {
+          errors.firstName = {
+            type: 'required',
+            message: 'First name is required',
+          }
+        }
+
+        if (!data.lastName?.trim()) {
+          errors.lastName = {
+            type: 'required',
+            message: 'Last name is required',
+          }
+        }
+
+        if (!data.email?.trim()) {
+          errors.email = {
+            type: 'required',
+            message: 'Email is required',
+          }
+        }
+
+        if (!data.address?.fullName?.trim()) {
+          errors['address.fullName'] = {
+            type: 'required',
+            message: 'Full name is required',
+          }
+        }
+
+        if (!data.address?.address?.trim()) {
+          errors['address.address'] = {
+            type: 'required',
+            message: 'Address is required',
+          }
+        }
+
+        if (!data.address?.city?.trim()) {
+          errors['address.city'] = {
+            type: 'required',
+            message: 'City is required',
+          }
+        }
+
+        if (!data.address?.state?.trim()) {
+          errors['address.state'] = {
+            type: 'required',
+            message: 'State is required',
+          }
+        }
+
+        if (!data.address?.country?.trim()) {
+          errors['address.country'] = {
+            type: 'required',
+            message: 'Country is required',
+          }
+        }
+
+        if (!data.address?.zip?.trim()) {
+          errors['address.zip'] = {
+            type: 'required',
+            message: 'Zip code is required',
+          }
+        }
+
+        if (!data.address?.mobileNo?.trim()) {
+          errors['address.mobileNo'] = {
+            type: 'required',
+            message: 'Mobile number is required',
+          }
+        }
+      }
+
+      return {
+        values: Object.keys(errors).length ? {} : data,
+        errors,
+      }
+    },
   })
 
   const { reset, handleSubmit } = methods
@@ -80,6 +164,12 @@ export default function ManualUserFormPage({
       })
     }
   }, [defaultValues, reset])
+
+  useEffect(() => {
+    if (!generalSetting || generalSetting.length === 0) {
+      dispatch(getGeneralSetting())
+    }
+  }, [dispatch, generalSetting])
 
   useEffect(() => {
     if (isEditMode) return
@@ -216,56 +306,9 @@ export default function ManualUserFormPage({
 
     // Extract address components
     const stateCode = addressParts.stcd || ''
-    let stateName = ''
     let cityName = addressParts.dst || ''
     const address = pradr?.adr || ''
     const zip = addressParts.pncd || ''
-
-    // Find state name from code
-    if (stateCode) {
-      const stateMapping = {
-        '01': 'Jammu and Kashmir',
-        '02': 'Himachal Pradesh',
-        '03': 'Punjab',
-        '04': 'Chandigarh',
-        '05': 'Uttarakhand',
-        '06': 'Haryana',
-        '07': 'Delhi',
-        '08': 'Rajasthan',
-        '09': 'Uttar Pradesh',
-        10: 'Bihar',
-        11: 'Sikkim',
-        12: 'Arunachal Pradesh',
-        13: 'Nagaland',
-        14: 'Manipur',
-        15: 'Mizoram',
-        16: 'Tripura',
-        17: 'Meghalaya',
-        18: 'Assam',
-        19: 'West Bengal',
-        20: 'Jharkhand',
-        21: 'Odisha',
-        22: 'Chhattisgarh',
-        23: 'Madhya Pradesh',
-        24: 'Gujarat',
-        25: 'Daman and Diu',
-        26: 'Dadra and Nagar Haveli and Daman and Diu',
-        27: 'Maharashtra',
-        28: 'Andhra Pradesh',
-        29: 'Karnataka',
-        30: 'Goa',
-        31: 'Lakshadweep',
-        32: 'Kerala',
-        33: 'Tamil Nadu',
-        34: 'Puducherry',
-        35: 'Andaman and Nicobar Islands',
-        36: 'Telangana',
-        37: 'Andhra Pradesh',
-      }
-      stateName = stateMapping[stateCode] || ''
-    } else if (stj) {
-      stateName = stj.split('State - ')[1]?.split(',')[0]?.trim() || ''
-    }
 
     reset(
       {
@@ -275,7 +318,7 @@ export default function ManualUserFormPage({
           fullName: lgnm || '',
           address: address || '',
           city: cityName || '',
-          state: stateName || '',
+          state: stateCode || '',
           country: 'India',
           zip: zip || '',
           gst: gstin || '',
@@ -337,6 +380,11 @@ export default function ManualUserFormPage({
 
             <hr className="mb-7" />
 
+            <div className="text-lg text-white mb-3 bg-blue-500 inline-block px-2 py-1 rounded">
+              If user exists, enter email to auto-fill.
+            </div>
+            <FormAdminInputRow name="email" label="Email" type="email" />
+
             <FormAdminInputRow
               name="firstName"
               label="First Name"
@@ -350,11 +398,6 @@ export default function ManualUserFormPage({
               type="text"
               required
             />
-
-            <div className="text-lg text-white mb-3 bg-blue-500 inline-block px-2 py-1 rounded">
-              If user exists, enter email to auto-fill.
-            </div>
-            <FormAdminInputRow name="email" label="Email" type="email" />
 
             {lookingUpByEmail && (
               <div className="text-sm text-gray-500 -mt-2 mb-2">
@@ -378,15 +421,17 @@ export default function ManualUserFormPage({
             />
 
             {gstLoading && (
-              <div className="text-sm text-gray-500 -mt-2 mb-2">
+              <div className="text-sm text-gray-500 -mt-2 mb-4 pl-96">
                 Verifying GST number...
               </div>
             )}
             {gstError && (
-              <div className="text-sm text-red-600 -mt-2 mb-2">{gstError}</div>
+              <div className="text-sm text-red-600 -mt-2 mb-4 pl-96">
+                {gstError}
+              </div>
             )}
             {verifiedData?.data && (
-              <div className="text-sm text-green-600 -mt-2 mb-2">
+              <div className="text-sm text-green-600 -mt-2 mb-4 pl-96">
                 GST verified successfully! Auto-filled user data.
               </div>
             )}

@@ -286,8 +286,7 @@ export default function ShippingAddress({ onContinue, initialData = {} }) {
       {showNewAddressForm && (
         <div className="mb-6">
           <AddressForm
-            formData={formData}
-            handleChange={handleFormChange}
+            initialFormData={formData}
             handleSubmit={handleFormSubmit}
             handleCancel={handleCancelNewAddress}
             isLoading={isLoading}

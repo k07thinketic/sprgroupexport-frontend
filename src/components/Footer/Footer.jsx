@@ -59,8 +59,6 @@ const Footer = ({ settings = {} }) => {
                 sizes="(max-width: 768px) 100vw, 256px"
                 priority
               />
-              <Image
-              />
             </div>
 
             <div className="flex items-center text-gray-600 text-xs">

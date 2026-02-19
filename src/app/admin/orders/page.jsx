@@ -110,12 +110,12 @@ function OrdersPageContent() {
       }),
       columnHelper.accessor('paidAmount', {
         header: 'Paid Amount',
-        enableSorting: true,
+        enableSorting: false,
         cell: ({ getValue }) => `₹${getValue() ?? 0}`,
       }),
       columnHelper.accessor('remainingAmount', {
         header: 'Remaining Amount',
-        enableSorting: true,
+        enableSorting: false,
         cell: ({ getValue }) => `₹${getValue() ?? 0}`,
       }),
       columnHelper.display({

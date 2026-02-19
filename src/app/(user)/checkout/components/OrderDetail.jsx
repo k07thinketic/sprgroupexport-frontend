@@ -238,6 +238,46 @@ export default function OrderDetail({
         const { orderId, currency, keyId } = response
         const amountInPaise = Math.round(totalAmount * 100)
 
+        const currentUser = JSON.parse(localStorage.getItem('user'))
+        const selectedPaymentMethodId = paymentMethods.find(
+          (m) => m.type?.toLowerCase() === 'razorpay',
+        )?._id
+
+        const orderData = {
+          userId: currentUser?._id,
+          paymentMethod: selectedPaymentMethodId,
+          orderNotes,
+          items: displayItems.map((item) => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity || 1,
+            color: item.color,
+            size: item.size,
+            image: item.image,
+          })),
+          shippingAddress: {
+            _id: shippingAddress?._id,
+            fullName: shippingAddress?.fullName,
+            address: shippingAddress?.address,
+            city: shippingAddress?.city,
+            state: shippingAddress?.state,
+            country: shippingAddress?.country,
+            zipCode: shippingAddress?.zipCode,
+            mobileNo: shippingAddress?.mobileNo,
+            gst: shippingAddress?.gst,
+            pancard: shippingAddress?.pancard,
+          },
+          shippingMethod: {
+            _id: shippingMethod?._id,
+            name: shippingMethod?.name,
+            price: shippingMethod?.price,
+          },
+          totalAmount,
+          pendingStatusId: '695e0471c424c92fee37713b',
+        }
+        localStorage.setItem('pendingRazorpayOrder', JSON.stringify(orderData))
+
         const options = {
           key: keyId,
           amount: amountInPaise,
@@ -245,31 +285,13 @@ export default function OrderDetail({
           order_id: orderId,
           name: 'SPR Group Export',
           description: 'Order Payment',
-          handler: async (razorpayResponse) => {
-            const verifyRes = await api.post('/payments/verify/razorpay', {
-              razorpay_order_id: razorpayResponse.razorpay_order_id,
+          handler: (razorpayResponse) => {
+            const params = new URLSearchParams({
               razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+              razorpay_order_id: razorpayResponse.razorpay_order_id,
               razorpay_signature: razorpayResponse.razorpay_signature,
             })
-
-            if (verifyRes?.success) {
-              toast.success('Payment successful! Order placed 🎉')
-              const selectedPaymentMethodId = paymentMethods.find(
-                (m) => m.type?.toLowerCase() === 'razorpay',
-              )?._id
-
-              onContinue(
-                {
-                  paymentMethod: selectedPaymentMethodId,
-                  paymentProviderOrderId: razorpayResponse.razorpay_payment_id,
-                  paymentStatus: '695e0495c424c92fee377141',
-                  orderNotes,
-                },
-                'placeOrder',
-              )
-            } else {
-              alert('Payment verification failed!')
-            }
+            window.location.href = `/razorpay-success?${params.toString()}`
           },
           prefill: {
             name: user.name || '',
@@ -293,6 +315,10 @@ export default function OrderDetail({
     const selectedPaymentMethodId = paymentMethods.find(
       (m) => m.type?.toLowerCase() === paymentMethod.toLowerCase(),
     )?._id
+
+    if (paymentMethod === 'cod') {
+      toast.success('Processing your order...')
+    }
 
     onContinue(
       {
